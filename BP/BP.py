@@ -1,14 +1,14 @@
 from ortools.linear_solver import pywraplp
 
 
-def create_data_model():
+def create_data_model(weights,bin_capacity):
     """Create the data for the example."""
     data = {}
     weights = [6, 2, 4, 4, 4, 3, 2, 12, 3, 4, 4,1]
     data["weights"] = weights
     data["items"] = list(range(len(weights)))
     data["bins"] = data["items"]
-    data["bin_capacity"] = 12
+    data["bin_capacity"] = bin_capacity
     return data
 
 
