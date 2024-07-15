@@ -1,20 +1,12 @@
 from ortools.linear_solver import pywraplp
-
-
-def create_data_model(weights,bin_capacity):
-    """Create the data for the example."""
-    data = {}
-    weights = [6, 2, 4, 4, 4, 3, 2, 12, 3, 4, 4,1]
-    data["weights"] = weights
-    data["items"] = list(range(len(weights)))
-    data["bins"] = data["items"]
-    data["bin_capacity"] = bin_capacity
-    return data
+from offline import create_data_model,test_create_data_model,extract
 
 
 
-def main():
-    data = create_data_model()
+
+
+def BP(data):
+    
 
     # Create the mip solver with the SCIP backend.
     solver = pywraplp.Solver.CreateSolver("SCIP")
@@ -76,5 +68,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    data=create_data_model(25)
+    BP(data)
  
