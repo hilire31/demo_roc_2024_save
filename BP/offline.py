@@ -1,7 +1,8 @@
 import numpy as np
 import random as rd
 import traceback
-
+from BP import BP_exact
+from save import ftsave
 def extract(fich):
     if type(fich)!=str:
         raise TypeError
@@ -12,22 +13,29 @@ def extract(fich):
     except Exception as e:
         print("error open : ",e)
         raise FileNotFoundError
+    try:
+        open(fich,"r")
+    except Exception as e:
+        print("error open : ",e)
+        raise FileNotFoundError
     lignes=[]
     sol=None
+    size=None
     with open(fich,"r") as file:
         for ligne in file:
             ligne_liste=ligne.split()
             if ligne_liste!=[]:
                 lignes.append(ligne_liste)
-            if len(lignes)==1:
+            if len(lignes)==1 and size==None:
                 size=int(lignes[-1][0])
-            if "lpbnd=" in ligne_liste[-1]:
-                sol=ligne_liste[-1][5:]
+            
+            if 'solution' in ligne_liste:
+                sol=ligne_liste[-1][1:-2]
                 break
-    weights=[lignes[i][0] for i in range(size)]
-
-    print(weights)
-    return weights
+    sol = int(sol)
+    weights=[int(lignes[i][0]) for i in range(2,size+2)]
+    capacity=int(lignes[1][0])
+    return weights,sol,size,capacity
 
 def test_extract(registre_test,fich):
     registre_test["test_extract"]={}
@@ -35,7 +43,7 @@ def test_extract(registre_test,fich):
     registre_test["test_extract"]["open"]=True
     registre_test["test_extract"]["parameters"]=True
     try:
-        weights=extract(fich)
+        weights,sol,size,capacity=extract(fich)
     except Exception as e:
         if e == TypeError:
             print("error extract wrong parameter")
@@ -49,6 +57,27 @@ def test_extract(registre_test,fich):
             registre_test["test_extract"]["open"]=False
             print("error open")
             return False
+    
+
+    registre_test["test_extract"]["length"]=True
+    try:
+        print("len = ",len(weights))
+        assert len(weights)==size
+    except:
+        registre_test["test_extract"]["length"]=False
+        return False
+
+
+    registre_test["test_extract"]["value"]=True
+    try:
+        for i in weights:
+            if type(i)!=int:
+                raise ValueError
+    except:
+        registre_test["test_extract"]["value"]=False
+        return False
+    return True
+
     
 
 def create_data_model(size=7,capacity=12,weights = [8,2,3,5,12,7,9]):
@@ -83,13 +112,19 @@ def create_data_model(size=7,capacity=12,weights = [8,2,3,5,12,7,9]):
     return data
 
 
-def test_create_data_model(registre_test,size):
+def test_create_data_model(registre_test,size,capacity=None,weights=None):
     SIZE=size
+    if capacity==None:
+        capacity=rd.randint(10,20)
+
     registre_test["test_create_data_model"]={}
     if VERBOSE>=1:print("DEBUT TEST test_create_data_model")
     registre_test["test_create_data_model"]["init"]=True
     try:
-        data=create_data_model(SIZE,rd.randint(10,20))
+        if weights==None:
+            data=create_data_model(SIZE,capacity)
+        else:
+            data=create_data_model(SIZE,capacity,weights)
     except Exception as e:
         if VERBOSE>=0:print("error test_create_data_model init")
         registre_test["test_create_data_model"]["init"]=e
@@ -174,11 +209,15 @@ def next_k_fit_offline(data,k):
             bin_capacity[deb+K]=full_capacity-data["weights"][i]
             deb+=1
     somme=sum(data["weights"])
+    cnt=0
+    for i in bin_capacity:
+        cnt+=50-i
     nb_bins=0
     for i in bins:
         if i !=[]:
             nb_bins+=1
     ratio = somme/nb_bins
+    print("bin_capacity",bin_capacity)
     if VERBOSE>1:print("FIN ALGO : next_k_fit_offline")
         
 
@@ -206,8 +245,10 @@ def test_next_k_fit_offline(registre_test,k=2,data=[]):
 
     registre_test["test_next_k_fit_offline"]["sum(weight)<capacity"]=True
     registre_test["test_next_k_fit_offline"]["correct remaining capacity"]=True
+    S=0
     for i,bin in enumerate(bins):
         s=np.sum([data["weights"][elem] for elem in bin])
+        S+=s
         try:
             assert 0 <= s <= data["bin_capacity"]
         except:
@@ -216,6 +257,12 @@ def test_next_k_fit_offline(registre_test,k=2,data=[]):
             assert data["bin_capacity"]-s==bin_capacity[i]
         except:
             registre_test["test_next_k_fit_offline"]["correct remaining capacity"]=False
+
+    registre_test["test_next_k_fit_offline"]["all packed"]=True
+    try:
+        assert S==sum(data["weights"])
+    except:
+        registre_test["test_next_k_fit_offline"]["all packed"]=False
 
 
     test_next_k_fit_offline_fin=True
@@ -245,7 +292,7 @@ def test_fonction_tri(registre_test,data=[]):
 
         if VERBOSE>=1:print("DEBUT TEST fonction_tri_decreasing")
         registre_test["fonction_tri_decreasing"]={}
-        if VERBOSE>1:print(data)
+        #if VERBOSE>1:print(data)
 
 
         registre_test["fonction_tri_decreasing"]["init"]=True
@@ -256,7 +303,7 @@ def test_fonction_tri(registre_test,data=[]):
             registre_test["fonction_tri_decreasing"]["init"]=e
             return False
         registre_test["fonction_tri_decreasing"]["init"]=True
-        if VERBOSE>1:print(data_sorted_decreasing)
+        #if VERBOSE>1:print(data_sorted_decreasing)
 
 
         registre_test["fonction_tri_decreasing"]["ordre"]=True
@@ -299,16 +346,51 @@ def main():
     if TEST:
         registre_test={}
         k=3
-        size=20
+        size=10
         max_capacity=12
         weights=[rd.randint(0,max_capacity) for i in range(size)]
         try:
-            assert test_create_data_model(registre_test,12)
+            registre_test["test1"]={}
+            assert test_create_data_model(registre_test["test1"],12)
             data=create_data_model(size,max_capacity,weights)
-            assert test_fonction_tri(registre_test,data)
+            assert test_fonction_tri(registre_test["test1"],data)
             data_sorted=fonction_tri(data.copy())
-            assert test_next_k_fit_offline(registre_test,k,data_sorted)
-            assert test_extract(registre_test,"data/BPP_50_50_0.1_0.7_0_Results_BLV.txt")
+            assert test_next_k_fit_offline(registre_test["test1"],k,data_sorted)
+            
+            #print("exact_nb_bins = ",exact_nb_bins, "and approx1 = ",nb_bins_next_fit,"and approx2 = ",nb_bins_next_k_fit)
+            nb_bins_next_k_fit,bins,ratio,bin_capacity=next_k_fit_offline(data_sorted,k)
+            print("approx2 = ",nb_bins_next_k_fit)
+
+            exact_nb_bins,tps=BP_exact(data)
+            print("sans upper bound : exact_nb_bins = ",exact_nb_bins,"en ",tps,"milliseconds")
+            exact_nb_bins,tps=BP_exact(data,nb_bins_next_k_fit)
+            print("avec upper bound : exact_nb_bins = ",exact_nb_bins,"en ",tps,"milliseconds")
+
+
+            
+            registre_test["test2"]={}
+            assert test_extract(registre_test["test2"],r"BP\data\BPP_50_50_0.1_0.7_0_Results_BLV.txt")
+            weights_extracted,solution,size,capacity=extract(r"BP\data\BPP_50_50_0.1_0.7_0_Results_BLV.txt")
+            assert test_create_data_model(registre_test["test2"],size,capacity,weights_extracted)
+            data_extracted=create_data_model(size,capacity,weights_extracted)
+            
+            assert test_next_k_fit_offline(registre_test["test2"],k,data_extracted)
+            nb_bins,bins,ratio,bin_capacity=next_k_fit_offline(data_extracted,k)
+            #exact_nb_bins,tps=BP_exact(data_extracted,nb_bins)
+            #print("exact_nb_bins : ",exact_nb_bins,"en ",tps," millisecondes")
+
+
+            registre_test["test3"]={}
+            w=ftsave()
+            assert test_create_data_model(registre_test["test3"],120,150,w)
+            test_data=create_data_model(120,150,w)
+            nb_bins_test,bins,ratio,bin_capacity=next_k_fit_offline(test_data,k)
+            print("approx2 = ",nb_bins_test)
+            exact_nb_bins,tps=BP_exact(test_data,nb_bins)
+            print("exact_nb_bins : ",exact_nb_bins,"en ",tps," millisecondes")
+
+            
+            
         except Exception as e:
             print("\n**********\nfin registre : ",registre_test)
             print("erreur fin : ",e)

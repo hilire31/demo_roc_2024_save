@@ -1,13 +1,16 @@
 from ortools.linear_solver import pywraplp
-from offline import create_data_model,test_create_data_model,extract
+#from offline import create_data_model,test_create_data_model,extract
 
 
 
 
 
-def BP(data):
-    
-
+def BP_exact(data,ub=None):
+    if __name__ =="__main__":
+        VERBOSE=2
+    else:
+        VERBOSE=0
+    UB=ub
     # Create the mip solver with the SCIP backend.
     solver = pywraplp.Solver.CreateSolver("SCIP")
 
@@ -16,6 +19,8 @@ def BP(data):
 
     # Variables
     # x[i, j] = 1 if item i is packed in bin j.
+    if UB!=None:
+        data["bins"]=data["bins"][:UB]
     x = {}
     for i in data["items"]:
         for j in data["bins"]:
@@ -37,12 +42,16 @@ def BP(data):
             sum(x[(i, j)] * data["weights"][i] for i in data["items"])
             <= y[j] * data["bin_capacity"]
         )
+    #solver.Add(sum(bin_usage) >= lower_bound)
 
     # Objective: minimize the number of bins used.
     solver.Minimize(solver.Sum([y[j] for j in data["bins"]]))
 
-    print(f"Solving with {solver.SolverVersion()}")
+    if VERBOSE>0:print(f"Solving with {solver.SolverVersion()}")
     status = solver.Solve()
+    if status != pywraplp.Solver.OPTIMAL:
+        print("Solution non-optimale trouvée.....")
+
 
     if status == pywraplp.Solver.OPTIMAL:
         num_bins = 0
@@ -56,18 +65,27 @@ def BP(data):
                         bin_weight += data["weights"][i]
                 if bin_items:
                     num_bins += 1
-                    print("Bin number", j)
-                    print("  Items packed:", bin_items)
-                    print("  Total weight:", bin_weight)
-                    print()
-        print()
-        print("Number of bins used:", num_bins)
-        print("Time = ", solver.WallTime(), " milliseconds")
+                    if VERBOSE>0:
+                        print("Bin number", j)
+                        print("  Items packed:", bin_items)
+                        print("  Total weight:", bin_weight,"\n")
+        if VERBOSE>0:
+            print("Number of bins used:", num_bins)
+            print("Time = ", solver.WallTime(), " milliseconds")
     else:
         print("The problem does not have an optimal solution.")
+    return num_bins,solver.WallTime()
 
 
 if __name__ == "__main__":
-    data=create_data_model(25)
-    BP(data)
+    data={}
+    w=[1, 1, 3, 10, 6, 9, 6, 1, 7, 6]
+    data["weights"] = w
+    data["items"] = list(range(len(w)))
+    data["bins"] = data["items"]
+    data["bin_capacity"] = 12
+    data={'weights': [1, 1, 3, 10, 6, 9, 6, 1, 7, 6], 'items': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 'bins': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 'bin_capacity': 12}
+    n=BP_exact(data)
+    print(n)
+    pass
  
