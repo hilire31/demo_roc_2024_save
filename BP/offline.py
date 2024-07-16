@@ -346,7 +346,7 @@ def main():
     if TEST:
         registre_test={}
         k=3
-        size=10
+        size=30
         max_capacity=12
         weights=[rd.randint(0,max_capacity) for i in range(size)]
         try:
@@ -379,7 +379,7 @@ def main():
             #exact_nb_bins,tps=BP_exact(data_extracted,nb_bins)
             #print("exact_nb_bins : ",exact_nb_bins,"en ",tps," millisecondes")
 
-
+            '''
             registre_test["test3"]={}
             w=ftsave()
             assert test_create_data_model(registre_test["test3"],120,150,w)
@@ -388,7 +388,7 @@ def main():
             print("approx2 = ",nb_bins_test)
             exact_nb_bins,tps=BP_exact(test_data,nb_bins)
             print("exact_nb_bins : ",exact_nb_bins,"en ",tps," millisecondes")
-
+            '''
             
             
         except Exception as e:
