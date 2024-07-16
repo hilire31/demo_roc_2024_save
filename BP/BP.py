@@ -54,6 +54,7 @@ def BP_exact(data,ub=None):
 
 
     if status == pywraplp.Solver.OPTIMAL:
+        bins=[]
         num_bins = 0
         for j in data["bins"]:
             if y[j].solution_value() == 1:
@@ -69,12 +70,13 @@ def BP_exact(data,ub=None):
                         print("Bin number", j)
                         print("  Items packed:", bin_items)
                         print("  Total weight:", bin_weight,"\n")
+                    bins.append(bin_items)
         if VERBOSE>0:
-            print("Number of bins used:", num_bins)
+            print("Number of bins used:", data["bins"])
             print("Time = ", solver.WallTime(), " milliseconds")
     else:
         print("The problem does not have an optimal solution.")
-    return num_bins,solver.WallTime()
+    return num_bins,solver.WallTime(),bins
 
 
 if __name__ == "__main__":
@@ -84,7 +86,7 @@ if __name__ == "__main__":
     data["items"] = list(range(len(w)))
     data["bins"] = data["items"]
     data["bin_capacity"] = 12
-    data={'weights': [1, 1, 3, 10, 6, 9, 6, 1, 7, 6], 'items': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 'bins': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 'bin_capacity': 12}
+    data={'weights': [1, 1, 3, 10, 6, 9, 6, 1, 7, 6, 12, 5, 9, 10, 14], 'items': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 'bins': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 'bin_capacity': 12}
     n=BP_exact(data)
     print(n)
     pass

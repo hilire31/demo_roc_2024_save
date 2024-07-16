@@ -38,6 +38,7 @@ def extract(fich):
     return weights,sol,size,capacity
 
 def test_extract(registre_test,fich):
+    if VERBOSE>1:print("DEBUT TEST extract")
     registre_test["test_extract"]={}
     
     registre_test["test_extract"]["open"]=True
@@ -61,7 +62,6 @@ def test_extract(registre_test,fich):
 
     registre_test["test_extract"]["length"]=True
     try:
-        print("len = ",len(weights))
         assert len(weights)==size
     except:
         registre_test["test_extract"]["length"]=False
@@ -76,7 +76,28 @@ def test_extract(registre_test,fich):
     except:
         registre_test["test_extract"]["value"]=False
         return False
+    if VERBOSE>1:print("FIN TEST extract : TEST OK")
     return True
+import random
+import numpy as np
+
+def generate_weights(size, max_capacity, mean=None, std_dev=None, distribution='uniform'):
+    if distribution == 'uniform':
+        # Génération de poids avec une distribution uniforme
+        weights = [random.randint(0, max_capacity) for _ in range(size)]
+    elif distribution == 'normal':
+        if mean is None:
+            mean = max_capacity / 2
+        if std_dev is None:
+            std_dev = max_capacity / 10  # Ajustez selon le niveau de dispersion souhaité
+        weights = np.random.normal(mean, std_dev, size).tolist()
+        # S'assurer que les valeurs sont dans l'intervalle [0, max_capacity]
+        weights = [min(max(0, int(w)), max_capacity) for w in weights]
+    else:
+        raise ValueError("Distribution not supported. Use 'uniform' or 'normal'.")
+    
+    return weights
+
 
     
 
@@ -217,7 +238,6 @@ def next_k_fit_offline(data,k):
         if i !=[]:
             nb_bins+=1
     ratio = somme/nb_bins
-    print("bin_capacity",bin_capacity)
     if VERBOSE>1:print("FIN ALGO : next_k_fit_offline")
         
 
@@ -336,7 +356,7 @@ def test_fonction_tri(registre_test,data=[]):
             return False
 
 global VERBOSE,TEST
-VERBOSE=2
+VERBOSE=0
 TEST=True
 
 def main():
@@ -346,12 +366,14 @@ def main():
     if TEST:
         registre_test={}
         k=3
-        size=30
+        size=100
         max_capacity=12
-        weights=[rd.randint(0,max_capacity) for i in range(size)]
+        #weights=[rd.randint(0,max_capacity) for i in range(size)]
+        weights=generate_weights(size, max_capacity, mean=None, std_dev=3, distribution='uniform')
+
         try:
             registre_test["test1"]={}
-            assert test_create_data_model(registre_test["test1"],12)
+            assert test_create_data_model(registre_test["test1"],max_capacity)
             data=create_data_model(size,max_capacity,weights)
             assert test_fonction_tri(registre_test["test1"],data)
             data_sorted=fonction_tri(data.copy())
@@ -360,11 +382,14 @@ def main():
             #print("exact_nb_bins = ",exact_nb_bins, "and approx1 = ",nb_bins_next_fit,"and approx2 = ",nb_bins_next_k_fit)
             nb_bins_next_k_fit,bins,ratio,bin_capacity=next_k_fit_offline(data_sorted,k)
             print("approx2 = ",nb_bins_next_k_fit)
-
-            exact_nb_bins,tps=BP_exact(data)
+            print("weights : ",data["weights"])
+            
+            '''exact_nb_bins,tps,bin_items=BP_exact(data)
             print("sans upper bound : exact_nb_bins = ",exact_nb_bins,"en ",tps,"milliseconds")
-            exact_nb_bins,tps=BP_exact(data,nb_bins_next_k_fit)
+            print("bin_items",bin_items)'''
+            exact_nb_bins,tps,bin_items=BP_exact(data,nb_bins_next_k_fit)
             print("avec upper bound : exact_nb_bins = ",exact_nb_bins,"en ",tps,"milliseconds")
+            print("bin_items",bin_items)
 
 
             
@@ -379,16 +404,7 @@ def main():
             #exact_nb_bins,tps=BP_exact(data_extracted,nb_bins)
             #print("exact_nb_bins : ",exact_nb_bins,"en ",tps," millisecondes")
 
-            '''
-            registre_test["test3"]={}
-            w=ftsave()
-            assert test_create_data_model(registre_test["test3"],120,150,w)
-            test_data=create_data_model(120,150,w)
-            nb_bins_test,bins,ratio,bin_capacity=next_k_fit_offline(test_data,k)
-            print("approx2 = ",nb_bins_test)
-            exact_nb_bins,tps=BP_exact(test_data,nb_bins)
-            print("exact_nb_bins : ",exact_nb_bins,"en ",tps," millisecondes")
-            '''
+            
             
             
         except Exception as e:
@@ -397,7 +413,7 @@ def main():
             print(traceback.format_exc())
             return
         
-        print("\n**********\nfin registre : ",registre_test)
+        if VERBOSE>0:print("\n**********\nfin registre : ",registre_test)
         print("\nTESTS FULL OK")
     else:
         data=create_data_model()
