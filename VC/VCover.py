@@ -214,7 +214,7 @@ def load_graph(mode):
  
 if __name__ == '__main__':
     # Set appropriate flags
-    mode={"UI":True,"tree":True,"verbose":1,"space":True,"graphe":"MAISON","heuristique":True}
+    mode={"UI":True,"tree":True,"verbose":1,"space":True,"graphe":"KARATE","heuristique":True}
     G = load_graph(mode)
     vertex_cover_min, state_tree,nb_iter = BnB_vertex(G,mode)
     

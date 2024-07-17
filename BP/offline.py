@@ -81,7 +81,7 @@ def test_extract(registre_test,fich):
 import random
 import numpy as np
 
-def generate_weights(size, max_capacity, mean=None, std_dev=None, distribution='uniform'):
+def generate_weights(size, max_capacity, vmin,vmax,mean=None, std_dev=None, distribution='uniform'):
     if distribution == 'uniform':
         # Génération de poids avec une distribution uniforme
         weights = [random.randint(0, max_capacity) for _ in range(size)]
@@ -92,7 +92,7 @@ def generate_weights(size, max_capacity, mean=None, std_dev=None, distribution='
             std_dev = max_capacity / 10  # Ajustez selon le niveau de dispersion souhaité
         weights = np.random.normal(mean, std_dev, size).tolist()
         # S'assurer que les valeurs sont dans l'intervalle [0, max_capacity]
-        weights = [min(max(0, int(w)), max_capacity) for w in weights]
+        weights = [min(max(vmin, int(w)), vmax) for w in weights]
     else:
         raise ValueError("Distribution not supported. Use 'uniform' or 'normal'.")
     
@@ -356,7 +356,7 @@ def test_fonction_tri(registre_test,data=[]):
             return False
 
 global VERBOSE,TEST
-VERBOSE=0
+VERBOSE=1
 TEST=True
 
 def main():
@@ -366,31 +366,36 @@ def main():
     if TEST:
         registre_test={}
         k=3
-        size=100
+        size=30
         max_capacity=12
         #weights=[rd.randint(0,max_capacity) for i in range(size)]
-        weights=generate_weights(size, max_capacity, mean=None, std_dev=3, distribution='uniform')
-
+        weights=generate_weights(size, max_capacity,0+1,max_capacity-1, mean=None, std_dev=3, distribution='uniform')
+        print("weights : ",weights)
         try:
             registre_test["test1"]={}
             assert test_create_data_model(registre_test["test1"],max_capacity)
-            data=create_data_model(size,max_capacity,weights)
+            data=create_data_model(size,max_capacity,[7, 1, 4, 4, 11, 5, 12, 6, 10, 4, 7, 10, 7, 4, 9, 8, 0, 9, 4, 11, 9, 3, 8, 12, 10, 5, 1, 5, 5, 4])
             assert test_fonction_tri(registre_test["test1"],data)
             data_sorted=fonction_tri(data.copy())
             assert test_next_k_fit_offline(registre_test["test1"],k,data_sorted)
             
             #print("exact_nb_bins = ",exact_nb_bins, "and approx1 = ",nb_bins_next_fit,"and approx2 = ",nb_bins_next_k_fit)
             nb_bins_next_k_fit,bins,ratio,bin_capacity=next_k_fit_offline(data_sorted,k)
+
+            print(bins)
             print("approx2 = ",nb_bins_next_k_fit)
             print("weights : ",data["weights"])
-            
-            '''exact_nb_bins,tps,bin_items=BP_exact(data)
+            '''
+            exact_nb_bins,tps,bin_items,EMPTY=BP_exact(data_sorted)
             print("sans upper bound : exact_nb_bins = ",exact_nb_bins,"en ",tps,"milliseconds")
-            print("bin_items",bin_items)'''
-            exact_nb_bins,tps,bin_items=BP_exact(data,nb_bins_next_k_fit)
+            print("bin_items",bin_items)
+            print(EMPTY)
+            
+
+            exact_nb_bins,tps,bin_items,EMPTY=BP_exact(data_sorted,nb_bins_next_k_fit)
             print("avec upper bound : exact_nb_bins = ",exact_nb_bins,"en ",tps,"milliseconds")
             print("bin_items",bin_items)
-
+            print(EMPTY)'''
 
             
             registre_test["test2"]={}

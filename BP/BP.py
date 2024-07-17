@@ -52,7 +52,7 @@ def BP_exact(data,ub=None):
     if status != pywraplp.Solver.OPTIMAL:
         print("Solution non-optimale trouvée.....")
 
-
+    EMPTY=False
     if status == pywraplp.Solver.OPTIMAL:
         bins=[]
         num_bins = 0
@@ -71,23 +71,31 @@ def BP_exact(data,ub=None):
                         print("  Items packed:", bin_items)
                         print("  Total weight:", bin_weight,"\n")
                     bins.append(bin_items)
+                else:
+                    EMPTY=True
         if VERBOSE>0:
             print("Number of bins used:", data["bins"])
             print("Time = ", solver.WallTime(), " milliseconds")
     else:
         print("The problem does not have an optimal solution.")
-    return num_bins,solver.WallTime(),bins
+    return num_bins,solver.WallTime(),bins,EMPTY
 
-
+def fonction_tri(data,decreasing=True):
+    a=data["items"]
+    weights=data["weights"]
+    indices_tries = sorted(range(len(weights)), key=lambda k: weights[k],reverse=decreasing)
+    liste_triee = sorted(weights,reverse=decreasing)
+    data["items"]=indices_tries
+    data["weights"]=liste_triee
+    return data
 if __name__ == "__main__":
-    data={}
-    w=[1, 1, 3, 10, 6, 9, 6, 1, 7, 6]
-    data["weights"] = w
-    data["items"] = list(range(len(w)))
-    data["bins"] = data["items"]
-    data["bin_capacity"] = 12
-    data={'weights': [1, 1, 3, 10, 6, 9, 6, 1, 7, 6, 12, 5, 9, 10, 14], 'items': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 'bins': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 'bin_capacity': 12}
-    n=BP_exact(data)
-    print(n)
-    pass
+
+    
+    data={"weights": [2, 0, 7, 6, 5, 11, 8, 9, 3, 4, 8, 8, 0, 5, 4, 12, 7, 3, 10, 2, 8, 12, 2, 11, 1, 7, 7, 5, 0, 8], 'items': [i for i in range(30)], 'bins': [i for i in range(30)], 'bin_capacity': 12}
+    data=fonction_tri(data)
+    print(data["weights"])
+    n,tps,b=BP_exact(data,17)
+    print(n,tps)
+    print(b)
+    
  
