@@ -86,6 +86,10 @@ def generate_weights(size, max_capacity, vmin,vmax,mean=None, std_dev=None, dist
         # Génération de poids avec une distribution uniforme
         weights = [random.randint(0, max_capacity) for _ in range(size)]
     elif distribution == 'normal':
+        if vmin is None:
+            vmin = 0
+        if vmax is None:
+            vmax = max_capacity
         if mean is None:
             mean = max_capacity / 2
         if std_dev is None:
@@ -98,7 +102,14 @@ def generate_weights(size, max_capacity, vmin,vmax,mean=None, std_dev=None, dist
     
     return weights
 
+def stat_an(data):
 
+    stat={"size":len(data["weights"]),"max_capacity":data["bin_capacity"],"mean":None,"std_dev":None,"vmin":None,"vmax":None}
+    stat["vmax"]=max(data["weights"])
+    stat["vmin"]=min(data["weights"])
+    stat["std_dev"]=np.std(data["weights"])
+    stat["mean"]=np.mean(data["weights"])
+    return stat
     
 
 def create_data_model(size=7,capacity=12,weights = [8,2,3,5,12,7,9]):
@@ -199,7 +210,6 @@ def next_fit_offline(data):
             bins.append(bin.copy())
             bin=[i]
             bin_capacity=full_capacity-data["weights"][i]
-            print("capacity = ",bin_capacity, "bin : ",bin)
     bins.append(bin.copy())
 
 

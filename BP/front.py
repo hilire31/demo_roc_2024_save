@@ -1,8 +1,9 @@
 import tkinter as tk
 from tkinter import ttk
 from time import sleep
-from offline import generate_weights,create_data_model,fonction_tri,next_k_fit_offline
+from offline import next_fit_offline,generate_weights,create_data_model,fonction_tri,next_k_fit_offline,stat_an
 from BP import BP_exact
+import numpy as np
 
 def personalise():
     
@@ -111,7 +112,40 @@ def random_weight():
 
 
 def choose_preload():
-    pass
+    def validate():
+        global data
+        mode["pre_load"]=radio_var.get()
+        
+        sleep(0.1)
+        
+        for radio in lradio:
+            try:
+                radio.destroy()
+            except NameError:
+                pass
+
+        button_valid.destroy()
+        create_initial_buttons()
+        # Réafficher les boutons de départ
+        if mode["pre_load"]=="30_hard_1":
+            data=create_data_model(30,12,[2, 0, 7, 6, 5, 11, 8, 9, 3, 4, 8, 8, 0, 5, 4, 12, 7, 3, 10, 2, 8, 12, 2, 11, 1, 7, 7, 5, 0, 8])
+        elif mode["pre_load"]=="30_hard_2":
+            data=create_data_model(30,12,[7, 1, 4, 4, 11, 5, 12, 6, 10, 4, 7, 10, 7, 4, 9, 8, 0, 9, 4, 11, 9, 3, 8, 12, 10, 5, 1, 5, 5, 4])
+        elif mode["pre_load"]=="10_easy":
+            data=create_data_model(10,12,[7, 1, 4, 4, 11, 5, 12, 6, 10, 2])
+            
+    lopt_name = ["30_hard_1", "30_hard_2", "10_easy"]
+    
+    lradio = []
+    radio_var = tk.StringVar(value=lopt_name[-1])  # Default selection
+
+    for i, name in enumerate(lopt_name):
+        radio = ttk.Radiobutton(root, text=name, variable=radio_var, value=name)
+        lradio.append(radio)
+        radio.pack(pady=10 * i)
+    
+    button_valid = ttk.Button(root, text="validate", command=validate)
+    button_valid.pack(pady=10)
 def choose_load():
     
     def validate():
@@ -158,17 +192,51 @@ def choose_load():
     button_valid = ttk.Button(root, text="validate", command=validate)
     button_valid.pack(pady=10)
 
+
+
+
 def calculate():
-    print("data : ",data)
-    num_bins,tps,bins,EMPTY=BP_exact(data)
+    if option["stat"]:
+        stat=stat_an(data).copy()
+    '''num_bins,tps,bins,EMPTY=BP_exact(data)
     print("les objets : ",data["weights"],"ont été rangés dans ",num_bins," bins en ",tps/1000," secondes")
     print("voici la disposition des ",len(data["weights"]) ," objets dans les ",num_bins,"bins : ",bins)
-    if EMPTY:
-        print("le solver en a laissé au moins une vide...")
-    pass
+    '''
 
-def choose_weight():
-    pass
+
+    print(f"{len(data["weights"])} weights : {data["weights"]}")
+    if option["stat"]:
+        print(f"stat : \n\t mean : {stat["mean"]}\n\t vmax : {stat["vmax"]}\n\t vmin : {stat["vmin"]}\n\t vmax : {stat["vmax"]}\n\t ecart type : {stat["std_dev"]}")
+    
+    if option["heuristique"]:
+        up_bound={}
+        up_bound["next_fit_offline"]=next_fit_offline(data)[0]
+        #up_bound["best_fit_offline"]=best_fit_offline(data)[0]
+        up_bound["next_k_fit_offline"]=next_k_fit_offline(data,round(data["bin_capacity"]/8))[0]###à modifier
+        
+        up_bound_sorted={}
+        sorted_data=fonction_tri(data,decreasing=True)
+        up_bound_sorted["next_fit_offline"]=next_fit_offline(sorted_data)[0]
+        #up_bound_trie["best_fit_offline"]=best_fit_offline(sorted_data)[0]
+        up_bound_sorted["next_k_fit_offline"]=next_k_fit_offline(sorted_data,round(data["bin_capacity"]/8))[0]###à modifier
+        
+        
+        heur_text=["next_fit_offline","next_k_fit_offline"]
+        best_bound=np.min([up_bound[i] for i in heur_text])
+        best_bound_sorted=np.min(np.min([up_bound_sorted[i] for i in heur_text]))
+
+
+        
+        
+        print("\n\t upper bounds found : ")
+        for i in heur_text:
+            print(f"{i} non triée: {up_bound[i]}")
+            print(f"{i} triée: {up_bound_sorted[i]}")
+        best_bound=min(best_bound,best_bound_sorted)
+        print(f"best bound found : {best_bound}")
+    
+    
+
 def choose_options():
     pass
 def create_initial_buttons():
@@ -181,8 +249,12 @@ def create_initial_buttons():
     button_graph.pack(pady=0)
     button_option = ttk.Button(root, text="Choisir les options", command=choose_options)
     button_option.pack(pady=20)
-mode = {"graphe": "POISSON", "tree": True, "verbose": 1, "space": False,"UI":True,"heuristique":False}
 
+
+
+mode = {"load":None,"pre_load":None}
+option={"heuristique":True,"stat":True}
+data=create_data_model(10,12,[7, 1, 4, 4, 11, 5, 12, 6, 10, 2])
 
 
 root = tk.Tk()
