@@ -1,5 +1,6 @@
-def f(a,b,c,d=2):
-    print(a+b*d)
+a=[7, 1, 3, 4, 5, 6, 2, 7, 7 ,4,3]
+s=0
+for i in a:
+    s+=i
 
-
-f(1,2,3,None)
+print(s/12)

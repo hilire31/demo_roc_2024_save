@@ -4,6 +4,7 @@ from time import sleep
 from offline import next_fit_offline,generate_weights,create_data_model,fonction_tri,next_k_fit_offline,stat_an
 from BP import BP_exact
 import numpy as np
+import threading as th
 
 def personalise():
     
@@ -79,14 +80,19 @@ def random_weight():
             else:
                 param.append(int(s.get()))
 
+        if param[2]==None:
+            param[2]=0
+        if param[3]==None:
+            param[3]=100
+
 
         frame.destroy()
         distribution="normal"
-        weights=generate_weights(param[0],param[1],param[2],param[3],param[4],param[5],distribution)
+        weights=generate_weights(param[0],param[1],round(param[1]*param[2]/100),round(param[1]*param[3]/100),param[4],param[5],distribution)
         data=create_data_model(param[0],param[1],weights)
         create_initial_buttons()
 
-    param_text=["size", "max_capacity", "vmin","vmax","mean value of the weights", "standard deviation of the weights"]
+    param_text=["size", "max_capacity", "vmin en '%' de la cap","vmax en '%' de la cap","mean value of the weights", "standard deviation of the weights"]
     frame = ttk.Frame(root, padding="10")
     frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
     spins=[]
@@ -127,14 +133,22 @@ def choose_preload():
         button_valid.destroy()
         create_initial_buttons()
         # Réafficher les boutons de départ
-        if mode["pre_load"]=="30_hard_1":
-            data=create_data_model(30,12,[2, 0, 7, 6, 5, 11, 8, 9, 3, 4, 8, 8, 0, 5, 4, 12, 7, 3, 10, 2, 8, 12, 2, 11, 1, 7, 7, 5, 0, 8])
-        elif mode["pre_load"]=="30_hard_2":
-            data=create_data_model(30,12,[7, 1, 4, 4, 11, 5, 12, 6, 10, 4, 7, 10, 7, 4, 9, 8, 0, 9, 4, 11, 9, 3, 8, 12, 10, 5, 1, 5, 5, 4])
-        elif mode["pre_load"]=="10_easy":
-            data=create_data_model(10,12,[7, 1, 4, 4, 11, 5, 12, 6, 10, 2])
-            
-    lopt_name = ["30_hard_1", "30_hard_2", "10_easy"]
+        if mode["pre_load"]=="II1":
+            w=[7, 1, 3, 4, 5, 6, 2, 7, 7, 4, 3, 1, 5, 5, 7, 10, 9, 5, 4, 5, 3, 6, 2, 7, 7, 11, 9, 8, 4, 5, 3, 6, 2, 7, 7, 11, 9, 8]
+            data=create_data_model(len(w),12,w)
+        elif mode["pre_load"]=="ID1":
+            d=[7, 1, 3, 4, 5, 6, 2, 7, 7, 4, 9, 8, 9, 4, 9, 5, 8, 3, 1, 5, 5, 7, 8, 9, 5, 4, 5, 3]
+            data=create_data_model(len(d),12,d)
+        elif mode["pre_load"]=="ID2":
+            d=[7, 1, 3, 4, 5, 6, 2, 7, 7, 4, 9, 8, 9, 4, 9, 5, 8, 3, 1, 5, 5, 7, 8, 9, 5, 4, 5, 5]
+            data=create_data_model(len(d),12,d)
+        elif mode["pre_load"]=="IM1":
+            w=[7, 1, 3, 4, 5, 6, 2, 7, 7, 4, 9, 8, 9, 4, 9, 3, 8]#, 5, 1, 5, 5
+            data=create_data_model(len(w),12,w)
+        elif mode["pre_load"]=="IS1":
+            data=create_data_model(10,12,[7, 1, 3, 4, 5, 6, 2, 7, 7 ,4])
+        
+    lopt_name = ["II1","ID1", "ID2", "IM1", "IS1"]
     
     lradio = []
     radio_var = tk.StringVar(value=lopt_name[-1])  # Default selection
@@ -192,49 +206,138 @@ def choose_load():
     button_valid = ttk.Button(root, text="validate", command=validate)
     button_valid.pack(pady=10)
 
+def create_heuristique(data):
+    up_bound_bins={}
+    up_bound={}
+    up_bound["next_fit_offline"]=next_fit_offline(data)[0]
+    up_bound_bins["next_fit_offline"]=next_fit_offline(data)[1]
+    #up_bound["best_fit_offline"]=best_fit_offline(data)[0]
+    up_bound["next_k_fit_offline"]=next_k_fit_offline(data,round(data["bin_capacity"]/8))[0]###à modifier
+    up_bound_bins["next_k_fit_offline"]=next_k_fit_offline(data,round(data["bin_capacity"]/8))[1]###à modifier
 
+
+    up_bound_sorted={}
+    up_bound_sorted_bins={}
+    sorted_data=data.copy()
+    fonction_tri(sorted_data,decreasing=True)
+    up_bound_sorted["next_fit_offline"]=next_fit_offline(sorted_data)[0]
+    up_bound_sorted_bins["next_fit_offline"]=next_fit_offline(sorted_data)[1]
+    #up_bound_trie["best_fit_offline"]=best_fit_offline(sorted_data)[0]
+    up_bound_sorted["next_k_fit_offline"]=next_k_fit_offline(sorted_data,round(data["bin_capacity"]/8))[0]###à modifier
+    up_bound_sorted_bins["next_k_fit_offline"]=next_k_fit_offline(sorted_data,round(data["bin_capacity"]/8))[1]###à modifier
+    
+    
+    heur_text=["next_fit_offline","next_k_fit_offline"]
+    best_bound=np.min([up_bound[i] for i in heur_text])
+    best_bound_sorted=np.min(np.min([up_bound_sorted[i] for i in heur_text]))
+
+    h={}
+    h["best_bound"]=min(best_bound,best_bound_sorted)
+    for i in heur_text:
+        h[f"{i}_non_triée"]=up_bound[i]
+        h[f"{i}_non_triée_bins"]=up_bound_bins[i]
+        h[f"{i}_triée"]=up_bound_sorted[i]
+        h[f"{i}_triée_bins"]=up_bound_sorted_bins[i]
+        
+
+    return h.copy()
 
 
 def calculate():
-    if option["stat"]:
-        stat=stat_an(data).copy()
-    '''num_bins,tps,bins,EMPTY=BP_exact(data)
-    print("les objets : ",data["weights"],"ont été rangés dans ",num_bins," bins en ",tps/1000," secondes")
-    print("voici la disposition des ",len(data["weights"]) ," objets dans les ",num_bins,"bins : ",bins)
-    '''
+    def aff_stat(stat,button):
+        button.destroy()
+        p=f"stat : \n\t mean : {stat["mean"]}\n\t vmax : {stat["vmax"]}\n\t vmin : {stat["vmin"]}\n\t vmax : {stat["vmax"]}\n\t ecart type : {stat["std_dev"]}"
+        label_size = ttk.Label(frame, text=p)
+        label_size.grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
+    
+    def aff_heur(heur,buttons):
+        for i in buttons:
+            i.destroy()
+        p=""
+        for i in heur:
+            p+=i+" : "
+            p+=str(heur[i])+"\n" 
+            print(p)
+        label_size = ttk.Label(frame, text=p)
+        label_size.grid(row=3, column=0, padx=5, pady=5, sticky=tk.W)
 
+    def calc(data,ub=None):
+        def thread_calc(data):
+            global nb_bins,tps,bins,empty
+            nb_bins,tps,bins,empty=BP_exact(data)
+        
+        def thread_calc_ub(data,ub):
+            global nb_bins,tps,bins,empty
+            nb_bins,tps,bins,empty=BP_exact(data,ub)
+        if ub==None:
+            #th.Thread(target=lambda : thread_calc(data)).start()
+            nb_bins,tps,bins,empty=BP_exact(data)
+            t=f"the items have been packed in {nb_bins} bins in {tps/1000} seconds"
+            t+=f"\n the final bins are {bins}"
 
+            bins_weights=[]
+            bin_weights=[]
+            for bin in bins:
+                for i in bin:
+                    bin_weights.append(data["weights"][i])
+                bins_weights.append(bin_weights)
+                bin_weights=[]
+            t+=f"\n in weights : {bins_weights}"
+
+            label_result = ttk.Label(frame_choice, text=t)
+            label_result.grid(row=3, column=0, padx=5, pady=5, sticky=tk.W)
+        else:
+            nb_bins,tps,bins,empty=BP_exact(data,ub)
+            t=f"the items have been packed in {nb_bins} bins in {tps/1000} seconds thanks to the upper bound"
+            t+=f"\n the final bins are {bins}"
+
+            bins_weights=[]
+            bin_weights=[]
+            for bin in bins:
+                for i in bin:
+                    bin_weights.append(data["weights"][i])
+                bins_weights.append(bin_weights)
+                bin_weights=[]
+            t+=f"\n in weights : {bins_weights}"
+
+            label_result = ttk.Label(frame_choice, text=t)
+            label_result.grid(row=4, column=0, padx=5, pady=5, sticky=tk.W)
+    def quit():
+        frame_choice.destroy()
+        frame.destroy()
+        create_initial_buttons()
+        
+    stat=stat_an(data).copy()
+    buttons=[button_tree, button_graph,button_option]
+    for i in buttons:
+        i.destroy()
+    
+    frame = ttk.Frame(root, padding="10")
+    frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+
+    p=f"{len(data["weights"])} weights : {data["weights"]}"
+    label_size = ttk.Label(frame, text=p)
+    label_size.grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
     print(f"{len(data["weights"])} weights : {data["weights"]}")
-    if option["stat"]:
-        print(f"stat : \n\t mean : {stat["mean"]}\n\t vmax : {stat["vmax"]}\n\t vmin : {stat["vmin"]}\n\t vmax : {stat["vmax"]}\n\t ecart type : {stat["std_dev"]}")
-    
-    if option["heuristique"]:
-        up_bound={}
-        up_bound["next_fit_offline"]=next_fit_offline(data)[0]
-        #up_bound["best_fit_offline"]=best_fit_offline(data)[0]
-        up_bound["next_k_fit_offline"]=next_k_fit_offline(data,round(data["bin_capacity"]/8))[0]###à modifier
-        
-        up_bound_sorted={}
-        sorted_data=fonction_tri(data,decreasing=True)
-        up_bound_sorted["next_fit_offline"]=next_fit_offline(sorted_data)[0]
-        #up_bound_trie["best_fit_offline"]=best_fit_offline(sorted_data)[0]
-        up_bound_sorted["next_k_fit_offline"]=next_k_fit_offline(sorted_data,round(data["bin_capacity"]/8))[0]###à modifier
-        
-        
-        heur_text=["next_fit_offline","next_k_fit_offline"]
-        best_bound=np.min([up_bound[i] for i in heur_text])
-        best_bound_sorted=np.min(np.min([up_bound_sorted[i] for i in heur_text]))
 
-
-        
-        
-        print("\n\t upper bounds found : ")
-        for i in heur_text:
-            print(f"{i} non triée: {up_bound[i]}")
-            print(f"{i} triée: {up_bound_sorted[i]}")
-        best_bound=min(best_bound,best_bound_sorted)
-        print(f"best bound found : {best_bound}")
+    button_stat=ttk.Button(frame,text="Stat", command=lambda:aff_stat(stat,button_stat))
+    button_stat.grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
+    heur=create_heuristique(data).copy()
+    button_heur=ttk.Button(frame,text="Heuristique", command=lambda:aff_heur(heur,[button_stat,button_heur]))
+    button_heur.grid(row=3, column=0, padx=5, pady=5, sticky=tk.W)
     
+    frame_choice = ttk.Frame(root, padding="10")
+    frame_choice.grid(row=5, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+
+    button_UB=ttk.Button(frame_choice,text="Upper Bound", command=lambda:calc(data,heur["best_bound"]))
+    button_UB.grid(row=5, column=0, padx=5, pady=5, sticky=tk.W)
+    
+
+    button_nUB=ttk.Button(frame_choice,text="No Upper Bound", command=lambda:calc(data))
+    button_nUB.grid(row=5, column=1, padx=5, pady=5, sticky=tk.W)
+
+    quit_button=ttk.Button(frame_choice,text="Quit", command=quit)
+    quit_button.grid(row=6, column=1, padx=5, pady=5, sticky=tk.W)
     
 
 def choose_options():
@@ -254,7 +357,7 @@ def create_initial_buttons():
 
 mode = {"load":None,"pre_load":None}
 option={"heuristique":True,"stat":True}
-data=create_data_model(10,12,[7, 1, 4, 4, 11, 5, 12, 6, 10, 2])
+data=create_data_model(10,12,[7, 1, 3, 4, 5, 6, 2, 7, 7 ,4])
 
 
 root = tk.Tk()

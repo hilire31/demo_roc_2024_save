@@ -2,7 +2,6 @@ import numpy as np
 import random as rd
 import traceback
 from BP import BP_exact
-from save import ftsave
 def extract(fich):
     if type(fich)!=str:
         raise TypeError
@@ -308,7 +307,6 @@ def test_next_k_fit_offline(registre_test,k=2,data=[]):
 
 
 def fonction_tri(data,decreasing=True):
-    a=data["items"]
     weights=data["weights"]
     indices_tries = sorted(range(len(weights)), key=lambda k: weights[k],reverse=decreasing)
     liste_triee = sorted(weights,reverse=decreasing)

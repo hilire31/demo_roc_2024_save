@@ -1,6 +1,6 @@
 from ortools.linear_solver import pywraplp
 #from offline import create_data_model,test_create_data_model,extract
-
+import math
 
 
 
@@ -19,8 +19,7 @@ def BP_exact(data,ub=None):
 
     # Variables
     # x[i, j] = 1 if item i is packed in bin j.
-    if UB!=None:
-        data["bins"]=data["bins"][:UB]
+    
     x = {}
     for i in data["items"]:
         for j in data["bins"]:
@@ -30,7 +29,8 @@ def BP_exact(data,ub=None):
     y = {}
     for j in data["bins"]:
         y[j] = solver.IntVar(0, 1, "y[%i]" % j)
-
+    if UB!=None:
+            data["bins"]=data["bins"][:UB]
     # Constraints
     # Each item must be in exactly one bin.
     for i in data["items"]:
@@ -42,11 +42,14 @@ def BP_exact(data,ub=None):
             sum(x[(i, j)] * data["weights"][i] for i in data["items"])
             <= y[j] * data["bin_capacity"]
         )
-    #solver.Add(sum(bin_usage) >= lower_bound)
+    lower_bound = math.ceil(sum(data["weights"]) / data["bin_capacity"])
+    if UB!=None:
+        solver.Add(sum([y[j] for j in data["bins"]]) >= lower_bound)
 
     # Objective: minimize the number of bins used.
     solver.Minimize(solver.Sum([y[j] for j in data["bins"]]))
 
+    
     if VERBOSE>0:print(f"Solving with {solver.SolverVersion()}")
     status = solver.Solve()
     if status != pywraplp.Solver.OPTIMAL:
@@ -80,22 +83,15 @@ def BP_exact(data,ub=None):
         print("The problem does not have an optimal solution.")
     return num_bins,solver.WallTime(),bins,EMPTY
 
-def fonction_tri(data,decreasing=True):
-    a=data["items"]
-    weights=data["weights"]
-    indices_tries = sorted(range(len(weights)), key=lambda k: weights[k],reverse=decreasing)
-    liste_triee = sorted(weights,reverse=decreasing)
-    data["items"]=indices_tries
-    data["weights"]=liste_triee
-    return data
+
 if __name__ == "__main__":
 
+    d=[7, 7, 5, 6, 5, 5, 6, 6, 5, 4, 9, 4, 4, 5, 6, 6, 8, 7, 5, 8, 8, 6, 5, 6, 5, 5, 7, 5, 5, 6, 6, 3, 3, 6, 8, 5, 6, 4, 5, 5, 5, 4, 5, 6, 5, 7, 4, 6, 5, 7, 4, 4, 5, 5, 6, 6, 8, 6, 5, 5, 7, 5, 4, 5, 6, 6, 4, 5, 7, 6]
+    data={"weights": d, 'items': [i for i in range(len(d))], 'bins': [i for i in range(len(d))], 'bin_capacity': 12}
     
-    data={"weights": [2, 0, 7, 6, 5, 11, 8, 9, 3, 4, 8, 8, 0, 5, 4, 12, 7, 3, 10, 2, 8, 12, 2, 11, 1, 7, 7, 5, 0, 8], 'items': [i for i in range(30)], 'bins': [i for i in range(30)], 'bin_capacity': 12}
-    data=fonction_tri(data)
-    print(data["weights"])
-    n,tps,b=BP_exact(data,17)
-    print(n,tps)
-    print(b)
+    
+    n,tps,b,foo=BP_exact(data)
+    print("in ",n,"bins in ",tps/1000,"seconds")
+    print("bins : ",b)
     
  
