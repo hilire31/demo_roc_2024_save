@@ -6,6 +6,7 @@ from BP import BP_exact
 import numpy as np
 import threading as th
 
+data=create_data_model(10,12,[7, 1, 3, 4, 5, 6, 2, 7, 7 ,4])
 def personalise():
     
     
@@ -245,10 +246,11 @@ def create_heuristique(data):
 
 def calculate():
     def aff_stat(stat,button):
+        pass
         button.destroy()
         p="stat : "
-        p+=f"\n\t number of weights : {stat["size"]} \n\t lower bound : {stat["lb"]}"
-        p+=f"\n\t mean : {stat["mean"]}\n\t vmax : {stat["vmax"]}\n\t vmin : {stat["vmin"]}\n\t vmax : {stat["vmax"]}\n\t ecart type : {stat["std_dev"]}"
+        p+=f"\n\t number of weights : {stat['size']} \n\t lower bound : {stat['lb']}"
+        p+=f"\n\t mean : {stat['mean']}\n\t vmax : {stat['vmax']}\n\t vmin : {stat['vmin']}\n\t vmax : {stat['vmax']}\n\t ecart type : {stat['std_dev']}"
         
         label_size = ttk.Label(frame, text=p)
         label_size.grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
@@ -282,7 +284,7 @@ def calculate():
             bin_weights=[]
             for bin in bins:
                 for i in bin:
-                    bin_weights.append(data["weights"][i])
+                    bin_weights.append(data['weights'][i])
                 bins_weights.append(bin_weights)
                 bin_weights=[]
             t+=f"\n in weights : {bins_weights}"
@@ -318,10 +320,10 @@ def calculate():
     frame = ttk.Frame(root, padding="10")
     frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
-    p=f"{len(data["weights"])} weights : {data["weights"]}"
+    p=f"{len(data['weights'])} weights : {data['weights']}"
     label_size = ttk.Label(frame, text=p)
     label_size.grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
-    print(f"{len(data["weights"])} weights : {data["weights"]}")
+    print(f"{len(data['weights'])} weights : {data['weights']}")
 
     button_stat=ttk.Button(frame,text="Stat", command=lambda:aff_stat(stat,button_stat))
     button_stat.grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
@@ -360,7 +362,6 @@ def create_initial_buttons():
 
 mode = {"load":None,"pre_load":None}
 option={"heuristique":True,"stat":True}
-data=create_data_model(10,12,[7, 1, 3, 4, 5, 6, 2, 7, 7 ,4])
 
 
 root = tk.Tk()
