@@ -2,6 +2,29 @@ import numpy as np
 import random as rd
 import traceback
 from BP import BP_exact
+
+
+
+
+
+########## HEURISTIQUES OFFLINE ###############
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def extract(fich):
     if type(fich)!=str:
         raise TypeError
@@ -108,6 +131,7 @@ def stat_an(data):
     stat["vmin"]=min(data["weights"])
     stat["std_dev"]=np.std(data["weights"])
     stat["mean"]=np.mean(data["weights"])
+    stat["lb"]=np.sum(data["weights"])/data["bin_capacity"]
     return stat
     
 

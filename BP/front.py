@@ -246,7 +246,10 @@ def create_heuristique(data):
 def calculate():
     def aff_stat(stat,button):
         button.destroy()
-        p=f"stat : \n\t mean : {stat["mean"]}\n\t vmax : {stat["vmax"]}\n\t vmin : {stat["vmin"]}\n\t vmax : {stat["vmax"]}\n\t ecart type : {stat["std_dev"]}"
+        p="stat : "
+        p+=f"\n\t number of weights : {stat["size"]} \n\t lower bound : {stat["lb"]}"
+        p+=f"\n\t mean : {stat["mean"]}\n\t vmax : {stat["vmax"]}\n\t vmin : {stat["vmin"]}\n\t vmax : {stat["vmax"]}\n\t ecart type : {stat["std_dev"]}"
+        
         label_size = ttk.Label(frame, text=p)
         label_size.grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
     
