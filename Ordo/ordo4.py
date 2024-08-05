@@ -35,7 +35,7 @@ def main() -> None:
 
     all_tasks = {}
     machine_to_intervals = collections.defaultdict(list)
-    tasks_by_start=collections.defaultdict(list)
+    machine_id_to_intervals=collections.defaultdict(list)
     intervals=[]
     task_type = collections.namedtuple("task_type", "start end interval machine_used")
 
@@ -44,28 +44,33 @@ def main() -> None:
         suffix = f"_{task_id}"
         start_var = model.new_int_var(0, horizon, "start" + suffix)
         end_var = model.new_int_var(0, horizon, "end" + suffix)
-        is_first_boat=model.new_bool_var(0,"first"+suffix)
-        is_second_boat=model.new_bool_var(0,"second"+suffix)
-        interval_var_first = model.new_optional_interval_var(start_var, processing_time, end_var,is_first_boat, "interval" + suffix)
-        interval_var_second = model.new_optional_interval_var(start_var, processing_time, end_var,is_second_boat, "interval" + suffix)
-        intervals.append(interval_var_first)
-        intervals.append(interval_var_second)
-        model.add(interval_var_first==())
+        interval_var = model.new_interval_var(start_var, processing_time, end_var, "interval" + suffix)
+        
+        intervals.append(interval_var)
         machine_var = model.new_int_var_from_domain(cp_model.Domain.FromValues(id_machines), "machine" + suffix)
         all_tasks[task_id] = task_type(start=start_var, end=end_var, interval=interval_var, machine_used=machine_var)
         model.add(end_var<=due_date)
         machine_to_intervals[machine_var].append(interval_var)
+        for id in id_machines:
+            machine_id_to_intervals[id].append(interval_var)
 
         
 
     # Add no-overlap constraint for each machine.
+    
     for machine in id_machines:
-        model.add_no_overlap(machine_to_intervals[machine])
-
+        model.add_no_overlap(machine_id_to_intervals[machine])
     
 
 
+    weights = [task[3] for task in task_data]
+
+    for machine in id_machines:
+        model.add_cumulative(machine_to_intervals[machine], weights, 3)
+    #model.add_cumulative(intervals, weights, 2)
+
     # Add capacity constraints.
+    '''
     for machine_id in id_machines:
         assigned_tasks = [model.new_bool_var(f"assigned_{task_id}_to_{machine_id}") for task_id in all_tasks]
         for task_id, task in enumerate(task_data):
@@ -75,7 +80,7 @@ def main() -> None:
             model.add(
                 all_tasks[task_id].machine_used != machine_id
             ).only_enforce_if(assigned_tasks[task_id].Not())
-
+    '''
     
 
             
@@ -87,11 +92,6 @@ def main() -> None:
         obj_var,
         [all_tasks[task_id].end for task_id in all_tasks],
     )
-
-    weights = [task[3] for task in task_data]
-
-
-    model.add_cumulative(intervals, weights, 2)
     
     
 
@@ -132,7 +132,7 @@ def main() -> None:
 
     else:
         print("No solution found.")
-    
+    print(machine_to_intervals)
     print("Time = ", solver.WallTime(), " milliseconds")
 
 if __name__ == "__main__":

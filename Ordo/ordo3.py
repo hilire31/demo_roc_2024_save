@@ -44,13 +44,8 @@ def main() -> None:
         suffix = f"_{task_id}"
         start_var = model.new_int_var(0, horizon, "start" + suffix)
         end_var = model.new_int_var(0, horizon, "end" + suffix)
-        is_first_boat=model.new_bool_var(0,"first"+suffix)
-        is_second_boat=model.new_bool_var(0,"second"+suffix)
-        interval_var_first = model.new_optional_interval_var(start_var, processing_time, end_var,is_first_boat, "interval" + suffix)
-        interval_var_second = model.new_optional_interval_var(start_var, processing_time, end_var,is_second_boat, "interval" + suffix)
-        intervals.append(interval_var_first)
-        intervals.append(interval_var_second)
-        model.add(interval_var_first==())
+        interval_var = model.new_interval_var(start_var, processing_time, end_var, "interval" + suffix)
+        intervals.append(interval_var)
         machine_var = model.new_int_var_from_domain(cp_model.Domain.FromValues(id_machines), "machine" + suffix)
         all_tasks[task_id] = task_type(start=start_var, end=end_var, interval=interval_var, machine_used=machine_var)
         model.add(end_var<=due_date)
@@ -90,8 +85,8 @@ def main() -> None:
 
     weights = [task[3] for task in task_data]
 
-
-    model.add_cumulative(intervals, weights, 2)
+    inter=[]
+    model.add_cumulative(intervals, weights, 1)
     
     
 

@@ -1,0 +1,5 @@
+matplotlib
+tk
+numpy
+networkx
+ortools

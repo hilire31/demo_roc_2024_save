@@ -1,10 +1,9 @@
 import tkinter as tk
 from tkinter import ttk
 from time import sleep
-from offline import next_fit_offline,generate_weights,create_data_model,fonction_tri,next_k_fit_offline,stat_an
+from offline import next_fit_offline,generate_weights,create_data_model,fonction_tri,next_k_fit_offline,stat_an,best_fit_offline
 from BP import BP_exact
 import numpy as np
-import threading as th
 
 data=create_data_model(10,12,[7, 1, 3, 4, 5, 6, 2, 7, 7 ,4])
 def personalise():
@@ -147,7 +146,7 @@ def choose_preload():
             w=[7, 1, 3, 4, 5, 6, 2, 7, 7, 4, 9, 8, 9, 4, 9, 3, 8]#, 5, 1, 5, 5
             data=create_data_model(len(w),12,w)
         elif mode["pre_load"]=="IS1":
-            data=create_data_model(10,12,[7, 1, 3, 4, 5, 6, 2, 7, 7 ,4])
+            data=create_data_model(10,12,[7, 1, 3, 4, 7, 6, 2, 5, 7 ,4])
         
     lopt_name = ["II1","ID1", "ID2", "IM1", "IS1"]
     
@@ -211,10 +210,11 @@ def create_heuristique(data):
     up_bound_bins={}
     up_bound={}
     up_bound["next_fit_offline"]=next_fit_offline(data)[0]
-    up_bound_bins["next_fit_offline"]=next_fit_offline(data)[1]
-    #up_bound["best_fit_offline"]=best_fit_offline(data)[0]
+    up_bound_bins["next_fit_offline"]=next_fit_offline(data)[2]
+    up_bound["best_fit_offline"]=best_fit_offline(data)[0]
+    up_bound_bins["best_fit_offline"]=best_fit_offline(data)[2]
     up_bound["next_k_fit_offline"]=next_k_fit_offline(data,round(data["bin_capacity"]/8))[0]###à modifier
-    up_bound_bins["next_k_fit_offline"]=next_k_fit_offline(data,round(data["bin_capacity"]/8))[1]###à modifier
+    up_bound_bins["next_k_fit_offline"]=next_k_fit_offline(data,round(data["bin_capacity"]/8))[2]###à modifier
 
 
     up_bound_sorted={}
@@ -222,34 +222,34 @@ def create_heuristique(data):
     sorted_data=data.copy()
     fonction_tri(sorted_data,decreasing=True)
     up_bound_sorted["next_fit_offline"]=next_fit_offline(sorted_data)[0]
-    up_bound_sorted_bins["next_fit_offline"]=next_fit_offline(sorted_data)[1]
-    #up_bound_trie["best_fit_offline"]=best_fit_offline(sorted_data)[0]
+    up_bound_sorted_bins["next_fit_offline"]=next_fit_offline(sorted_data)[2]
+    up_bound_sorted["best_fit_offline"]=best_fit_offline(sorted_data)[0]
+    up_bound_sorted_bins["best_fit_offline"]=best_fit_offline(sorted_data)[2]
     up_bound_sorted["next_k_fit_offline"]=next_k_fit_offline(sorted_data,round(data["bin_capacity"]/8))[0]###à modifier
-    up_bound_sorted_bins["next_k_fit_offline"]=next_k_fit_offline(sorted_data,round(data["bin_capacity"]/8))[1]###à modifier
+    up_bound_sorted_bins["next_k_fit_offline"]=next_k_fit_offline(sorted_data,round(data["bin_capacity"]/8))[2]###à modifier
     
     
-    heur_text=["next_fit_offline","next_k_fit_offline"]
+    heur_text=["next_fit_offline","next_k_fit_offline","best_fit_offline"]
     best_bound=np.min([up_bound[i] for i in heur_text])
     best_bound_sorted=np.min(np.min([up_bound_sorted[i] for i in heur_text]))
 
     h={}
-    h["best_bound"]=min(best_bound,best_bound_sorted)
+    h["best_bound"]=min(best_bound,best_bound_sorted,)
     for i in heur_text:
         h[f"{i}_non_triée"]=up_bound[i]
         h[f"{i}_non_triée_bins"]=up_bound_bins[i]
         h[f"{i}_triée"]=up_bound_sorted[i]
         h[f"{i}_triée_bins"]=up_bound_sorted_bins[i]
-        
 
     return h.copy()
 
 
 def calculate():
     def aff_stat(stat,button):
-        pass
         button.destroy()
         p="stat : "
-        p+=f"\n\t number of weights : {stat['size']} \n\t lower bound : {stat['lb']}"
+        p+=f"\n\t number of weights : {stat['size']} \n\t lower bound : {stat['lb']} \n\t bin capacity : {stat['bin_capacity']}"
+        p+=f"\n\t number of packings : {stat['brute_force']}"
         p+=f"\n\t mean : {stat['mean']}\n\t vmax : {stat['vmax']}\n\t vmin : {stat['vmin']}\n\t vmax : {stat['vmax']}\n\t ecart type : {stat['std_dev']}"
         
         label_size = ttk.Label(frame, text=p)
@@ -262,7 +262,7 @@ def calculate():
         for i in heur:
             p+=i+" : "
             p+=str(heur[i])+"\n" 
-            print(p)
+        print(p)
         label_size = ttk.Label(frame, text=p)
         label_size.grid(row=3, column=0, padx=5, pady=5, sticky=tk.W)
 
@@ -275,7 +275,6 @@ def calculate():
             global nb_bins,tps,bins,empty
             nb_bins,tps,bins,empty=BP_exact(data,ub)
         if ub==None:
-            #th.Thread(target=lambda : thread_calc(data)).start()
             nb_bins,tps,bins,empty=BP_exact(data)
             t=f"the items have been packed in {nb_bins} bins in {tps/1000} seconds"
             t+=f"\n the final bins are {bins}"

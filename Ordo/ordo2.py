@@ -31,15 +31,29 @@ for i in animaux:
     model.Add(sum(x[(i, j)] for j in bateaux) == 1)
 
 # Contraintes : capacité des bateaux
-for j in bateaux:
-    model.Add(max_occ([S[(i, j)] for i in animaux]) <=capacite_bateaux[j])
-    model.Add(sum(x[(i, j)] for i in animaux) <= capacite_bateaux[j])
+
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Contraintes : respect des due-dates et calcul du makespan
 for i in animaux:
     for j in bateaux:
-        model.Add(S[i] + temps_traversee[(i, j)] * x[(i, j)] <= due_dates[i])
-        model.Add(makespan >= S[i] + temps_traversee[(i, j)] * x[(i, j)])
+        model.Add(S[(i,j)] + temps_traversee[(i, j)] * x[(i, j)] <= due_dates[i])
+        model.Add(makespan >= S[(i,j)] + temps_traversee[(i, j)] * x[(i, j)])
 
 # Fonction objectif : minimiser le makespan
 model.Minimize(makespan)

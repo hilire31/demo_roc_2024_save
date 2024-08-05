@@ -6,7 +6,6 @@ from BP import BP_exact
 
 
 
-
 ########## HEURISTIQUES OFFLINE ###############
 
 
@@ -16,7 +15,12 @@ from BP import BP_exact
 
 
 
-
+def stirling_second_kind(n, k):
+    result = 0
+    for j in range(k + 1):
+        term = ((-1) ** (k - j)) * (j ** n) / (np.math.factorial(k - j) * np.math.factorial(j))
+        result += term
+    return round(result)
 
 
 
@@ -132,6 +136,8 @@ def stat_an(data):
     stat["std_dev"]=np.std(data["weights"])
     stat["mean"]=np.mean(data["weights"])
     stat["lb"]=np.sum(data["weights"])/data["bin_capacity"]
+    stat["bin_capacity"]=data["bin_capacity"]
+    stat["brute_force"]=np.sum(stirling_second_kind(len(data["weights"]),i) for i in range(len(data["weights"])))
     return stat
     
 
@@ -240,8 +246,8 @@ def next_fit_offline(data):
     nb_bins=len(bins)
     ratio = somme/nb_bins
         
-
-    return nb_bins,bins,ratio
+    bins_weights = [[data["weights"][item] for item in bin] for bin in bins]
+    return nb_bins,bins,bins_weights
 
 def next_k_fit_offline(data,k):
     K=k
@@ -272,9 +278,9 @@ def next_k_fit_offline(data,k):
             nb_bins+=1
     ratio = somme/nb_bins
     if VERBOSE>1:print("FIN ALGO : next_k_fit_offline")
-        
-
-    return nb_bins,bins,ratio,bin_capacity
+    bins=[i for i in bins if i!=[]]
+    bins_weights = [[data["weights"][item] for item in bin] for bin in bins]
+    return nb_bins,bins,bins_weights,bin_capacity
 
     
 
@@ -328,6 +334,59 @@ def test_next_k_fit_offline(registre_test,k=2,data=[]):
     else:
         if VERBOSE>=0:print("error test_next_k_fit_offline")
         return False
+
+
+
+def best_fit_offline(data):
+    
+    # Initialisation des bins et des capacités des bins
+    bins = [[] for _ in range(len(data["items"]))]
+    full_capacity = data["bin_capacity"]
+    bin_capacity = [full_capacity for _ in range(len(data["items"]))]
+    
+    # Parcourir chaque item pour le placer dans le meilleur bin
+    for item in data["items"]:
+        best_bin = -1
+        min_capacity_left = full_capacity + 1
+        
+        # Trouver le meilleur bin pour l'item actuel
+        for index, capacity in enumerate(bin_capacity):
+            if data["weights"][item] <= capacity and (capacity - data["weights"][item]) < min_capacity_left:
+                best_bin = index
+                min_capacity_left = capacity - data["weights"][item]
+        
+        # Si un bin a été trouvé, placer l'item dedans
+        if best_bin != -1:
+            bins[best_bin].append(item)
+            bin_capacity[best_bin] -= data["weights"][item]
+        else:
+            print(f"Impossible de placer l'item {item} avec le poids {data['weights'][item]}")
+    
+    # Filtrer les bins pour enlever les bins vides
+    full_bins = [bin for bin in bins if bin]
+    nb_bins = len(full_bins)
+    bins = full_bins
+    bin_capacity = [cap for cap in bin_capacity if cap != full_capacity]
+    
+    # Calcul des poids des bins
+    bins_weights = [[data["weights"][item] for item in bin] for bin in bins]
+    
+    return nb_bins, bins, bins_weights, bin_capacity
+
+# Exemple d'utilisation
+data = {
+    "items": [0, 1, 2, 3],
+    "weights": [4, 8, 1, 4],
+    "bin_capacity": 10
+}
+
+nb_bins, bins, bins_weights, bin_capacity = best_fit_offline(data)
+print("Nombre de bins utilisés :", nb_bins)
+print("Bins :", bins)
+print("Poids des bins :", bins_weights)
+print("Capacité restante des bins :", bin_capacity)
+
+
 
 
 def fonction_tri(data,decreasing=True):
