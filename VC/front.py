@@ -96,6 +96,7 @@ def choose_graph():
     button_valid.pack(pady=10)
 
 def plot_state_tree():
+    pass
     # Exemple simple d'arbre des états sous forme de graphique
     
     # Set appropriate flags
@@ -111,12 +112,6 @@ def plot_state_tree():
     
     
 
-# Création de la fenêtre principale
-root = tk.Tk()
-root.title("Interface avec Matplotlib")
-
-# Création d'un frame pour contenir le graphique
-
 
 def create_initial_buttons():
     global button_tree, button_graph
@@ -124,6 +119,12 @@ def create_initial_buttons():
     button_tree.pack(pady=10)
     button_graph = ttk.Button(root, text="Choose the graph", command=choose_graph)
     button_graph.pack(pady=0)
+
+# Création de la fenêtre principale
+root = tk.Tk()
+root.title("Interface avec Matplotlib")
+
+# Création d'un frame pour contenir le graphique
 mode = {"graphe": "POISSON", "tree": True, "verbose": 1, "space": False,"UI":True,"heuristique":False}
 amount={
         "carnivores":3,

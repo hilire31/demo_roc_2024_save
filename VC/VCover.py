@@ -160,7 +160,7 @@ def load_graph(mode):
     
     if mode["graphe"]=="KARATE":
         from scipy.io import mmread
-        a = mmread('soc-karate.mtx')
+        a = mmread(r'soc-karate.mtx')
         G = nx.Graph(a)
         for i in G.nodes:
             G.nodes[i]["name"]=str(i)

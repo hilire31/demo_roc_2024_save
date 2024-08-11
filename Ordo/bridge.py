@@ -1,17 +1,20 @@
 import collections
 from ortools.sat.python import cp_model
+import numpy as np
+
+def create_random_data(size, bridge_capacity, mean_duration):
+    durations = np.random.normal(mean_duration, std_dev, size).tolist()
+    durations =[min(max(vmin, int(w)), vmax) for w in durations]
+
+def plot_result():
+    pass
 
 
-
-
-
-
-
-def main() -> None:
+def bridge_crossing_solve(task_data) :
     # Create the model.
     model = cp_model.CpModel()
 
-    task_data = [(0, 3, 7, 1), (1, 2, 3, 1), (2, 2, 4, 1),(3, 3, 4, 2)]  # task = (animal_id, processing_time, due_date, weight)
+    
 
     id_tasks=[i for i in range(len(task_data))]
 
@@ -22,7 +25,7 @@ def main() -> None:
     task_type = collections.namedtuple("task_type", "start end interval")
 
     for task_id, task in enumerate(task_data):
-        animal_id, processing_time, due_date, weights= task
+        processing_time, due_date, weights, before_list, after_list, set_date= task
         suffix = f"_{task_id}"
         start_var = model.new_int_var(0, horizon, "start" + suffix)
         end_var = model.new_int_var(0, horizon, "end" + suffix)
@@ -30,19 +33,21 @@ def main() -> None:
         
         intervals.append(interval_var)
         all_tasks[task_id] = task_type(start=start_var, end=end_var, interval=interval_var)
-        model.add(end_var<=due_date)
+        if due_date!=None:
+            model.add(end_var<=due_date)
+
+
+    for task_id, task in enumerate(task_data):
+        before_list=task[3]
+        after_list=task[4]
+        for i in before_list:
+            model.add(all_tasks[i].end<=all_tasks[task_id].end)
+        for i in after_list:
+            model.add(all_tasks[i].end>=all_tasks[task_id].end)
+
 
         
     
-
-    
-
-
-    
-
-            
-
-
     # Objective: minimize the makespan.
     obj_var = model.new_int_var(0, horizon, "makespan")
     model.add_max_equality(
@@ -50,7 +55,7 @@ def main() -> None:
         [all_tasks[task_id].end for task_id in all_tasks],
     )
 
-    weights = [task[3] for task in task_data]
+    weights = [task[2] for task in task_data]
 
 
     model.add_cumulative(intervals, weights, 3)
@@ -69,7 +74,8 @@ def main() -> None:
     assigned_task_type = collections.namedtuple("assigned_task_type", "start id duration end")
 
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-        print("Solution:")
+        schedule=[]
+        if VERBOSE>1:print("Solution:")
         # Create one list of assigned tasks per machine.
         assigned_tasks = collections.defaultdict(list)
         for task_id, task in enumerate(task_data):
@@ -77,21 +83,35 @@ def main() -> None:
                 assigned_task_type(
                     start=solver.value(all_tasks[task_id].start),
                     id=task_id,
-                    duration=task[1],
-                    end=solver.value(all_tasks[task_id].start)+task[1],
+                    duration=task[0],
+                    end=solver.value(all_tasks[task_id].start)+task[0],
                 )
             )
 
         # Finally print the solution found.
-        print("Optimal Schedule Length: ",round(solver.objective_value))
+        makespan=round(solver.objective_value)
+        if VERBOSE>0:print("Optimal Schedule Length: ",makespan)
         for task_id in id_tasks:
             task = assigned_tasks[task_id][0]
-            print(f"  Task {task.id}: Start at {task.start}, Duration {task.duration}")
+            schedule.append((task.id,task.start,task.duration))
+            if VERBOSE>0:print(f"  Task {task.id}: Start at {task.start}, and end at  {task.end}, weight : {task_data[task_id][2]}")
     
     else:
-        print("No solution found.")
-    
-    print("Time = ", solver.WallTime(), " milliseconds")
+        if VERBOSE>0:print("No solution found.")
+        return(None,None,None)
+    time=solver.WallTime()/1000
+    if VERBOSE>0:print("Time = ", time, " seconds")
+    return(time,schedule,makespan)
 
+
+global VERBOSE
 if __name__ == "__main__":
-    main()
+    
+    VERBOSE=1
+
+    task_data = [(3, 7, 1, [], []), (2, 5, 1, [0, 3], []), (2, 4, 1, [], []),(3, 6, 2, [], [])]  # task = (processing_time, due_date, weight, before_list, after_list)
+    #before_list = liste des taches qui doivent se terminer avant que celle là termine
+    #after_list = liste des taches qui doivent se terminer après que celle là termine
+    bridge_crossing_solve(task_data)
+else:
+    VERBOSE=0
