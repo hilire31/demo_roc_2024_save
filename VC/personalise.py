@@ -21,7 +21,7 @@ def fill_graph(amount):
     ]
 
     herbivores = [
-    "éléphant",
+    "chèvre",
     "girafe",
     "zèbre",
     "cheval",

@@ -106,7 +106,6 @@ def plot_state_tree():
         G=fill_graph(amount)
         #labels = {i: G.nodes[i]["name"] for i in range(amount["tot"])}
     vertex_cover_min, state_tree, nb_iter,frame = BnB_vertex(G, mode)
-    figure=plotgraph(G)
 
     
     

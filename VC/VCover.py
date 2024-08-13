@@ -150,6 +150,7 @@ def BnB_vertex(G,mode):
 
     iter([], edges, covered, root_id, 0)
     if len(vertex_cover_min)==0:
+        print("error")
         return [666],state_tree,nb_iter,figure
     else:
         return vertex_cover_min[0], state_tree,nb_iter,figure
@@ -200,21 +201,16 @@ def load_graph(mode):
         for i in G.nodes:
             G.nodes[i]["name"]=str(i)
     elif mode["graphe"]=="POISSON":
-        carnivores = [1, 2]
-        herbivores = [3, 4]
-        G.add_nodes_from(carnivores + herbivores)
-        for h in herbivores:
-            for c in carnivores:
-                G.add_edge(h, c)
-        G.add_edges_from([(4, 5), (4, 6), (6, 5), (7, 2)])
-        for i in G.nodes:
-            G.nodes[i]["name"]=str(i)
+        n_carnivores=["poisson","ours","chèvre","choux","loup","aigle"]
+        for i in range(1,len(n_carnivores)+1): 
+            G.add_nodes_from([(i, {'name': n_carnivores[i-1]})])
+        G.add_edges_from([(1, 2), (2, 3), (3, 4), (3, 5),(1, 6),(3,6)])
     return G
 
  
 if __name__ == '__main__':
     # Set appropriate flags
-    mode={"UI":True,"tree":True,"verbose":1,"space":True,"graphe":"KARATE","heuristique":True}
+    mode={"UI":True,"tree":True,"verbose":1,"space":False,"graphe":"POISSON","heuristique":True}
     G = load_graph(mode)
-    vertex_cover_min, state_tree,nb_iter = BnB_vertex(G,mode)
+    vertex_cover_min, state_tree,nb_iter,frame = BnB_vertex(G,mode)
     

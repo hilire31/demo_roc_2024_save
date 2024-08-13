@@ -143,7 +143,7 @@ def choose_preload():
             d=[7, 1, 3, 4, 5, 6, 2, 7, 7, 4, 9, 8, 9, 4, 9, 5, 8, 3, 1, 5, 5, 7, 8, 9, 5, 4, 5, 5]
             data=create_data_model(len(d),12,d)
         elif mode["pre_load"]=="IM1":
-            w=[7, 1, 3, 4, 5, 6, 2, 7, 7, 4, 9, 8, 9, 4, 9, 3, 8]#, 5, 1, 5, 5
+            w=[7, 1, 3, 4, 7, 6, 2, 5, 7, 4, 9, 8, 9, 4, 9, 3, 8]#, 5, 1, 5, 5
             data=create_data_model(len(w),12,w)
         elif mode["pre_load"]=="IS1":
             data=create_data_model(10,12,[7, 1, 3, 4, 7, 6, 2, 5, 7 ,4])
