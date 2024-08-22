@@ -65,5 +65,18 @@ Chaque problème peut être exécuté séparément. Voici comment les utiliser :
 
 Pour exécuter le script de bin-packing 1D :
 ```sh
-python ./BP/front.py
+python ./BP/front_packing.py
+```
+### Vertex Cover avec Branch and Bound
+
+Pour exécuter le script de Vertex Cover :
+```sh
+python ./VC/front_cover.py
+```
+
+### Problème d'Ordonnancement en Programmation par Contraintes
+
+Pour exécuter le script d'Ordonnancement :
+```sh
+python ./Ordo/front_bridge.py
 ```

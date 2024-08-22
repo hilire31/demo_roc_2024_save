@@ -1,4 +1,6 @@
-from test2 import f
+def f(a):
+    pass
+    print(a)
 
 nb=5
-a=f(nb)
+f(nb)

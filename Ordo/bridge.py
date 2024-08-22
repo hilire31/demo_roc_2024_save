@@ -2,22 +2,19 @@ import collections
 from ortools.sat.python import cp_model
 import numpy as np
 
-def create_random_data(size, bridge_capacity, mean_duration):
-    durations = np.random.normal(mean_duration, std_dev, size).tolist()
-    durations =[min(max(vmin, int(w)), vmax) for w in durations]
 
 def plot_result():
     pass
 
 
-def bridge_crossing_solve(task_data) :
+def bridge_crossing_solve(data) :
     # Create the model.
     model = cp_model.CpModel()
 
-    
+    task_data=data[0]
 
     id_tasks=[i for i in range(len(task_data))]
-
+    bridge_capacity=data[1]
     horizon = sum(task[1] for task in task_data)
 
     all_tasks = {}
@@ -35,6 +32,8 @@ def bridge_crossing_solve(task_data) :
         all_tasks[task_id] = task_type(start=start_var, end=end_var, interval=interval_var)
         if due_date!=None:
             model.add(end_var<=due_date)
+        if set_date!=None:
+            model.add(start_var>=set_date)
 
 
     for task_id, task in enumerate(task_data):
@@ -58,7 +57,7 @@ def bridge_crossing_solve(task_data) :
     weights = [task[2] for task in task_data]
 
 
-    model.add_cumulative(intervals, weights, 3)
+    model.add_cumulative(intervals, weights, bridge_capacity)
     
     
 
@@ -109,9 +108,10 @@ if __name__ == "__main__":
     
     VERBOSE=1
 
-    task_data = [(3, 7, 1, [], []), (2, 5, 1, [0, 3], []), (2, 4, 1, [], []),(3, 6, 2, [], [])]  # task = (processing_time, due_date, weight, before_list, after_list)
+    task_data = [(3, 7, 1, [], [], 0), (2, 5, 1, [0, 3], [], 0), (2, 4, 1, [], [], 0),(3, 6, 2, [], [], 0)]  # task = (processing_time, due_date, weight, before_list, after_list)
     #before_list = liste des taches qui doivent se terminer avant que celle là termine
     #after_list = liste des taches qui doivent se terminer après que celle là termine
-    bridge_crossing_solve(task_data)
+    data=[task_data,3]
+    bridge_crossing_solve(data)
 else:
     VERBOSE=0

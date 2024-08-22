@@ -70,7 +70,7 @@ def choose_graph():
     
     def create_initial_buttons():
         global button_tree, button_graph
-        button_tree = ttk.Button(root, text="Afficher l'Arbre des États", command=plot_state_tree)
+        button_tree = ttk.Button(root, text="Resolve", command=plot_state_tree)
         button_tree.pack(pady=10)
         button_graph = ttk.Button(root, text="Choose the graph", command=choose_graph)
         button_graph.pack(pady=0)
@@ -82,10 +82,10 @@ def choose_graph():
     except NameError:
         pass
 
-    lopt_name = ["KARATE", "US", "MAISON", "POISSON", "TEST","PERSO"]
+    lopt_name = ["AUGMENTEE", "ORIGINALE", "MAISON", "POISSON", "DIFFICILE","PERSO","CONTRE-EXEMPLE"]
     
     lradio = []
-    radio_var = tk.StringVar(value=lopt_name[-1])  # Default selection
+    radio_var = tk.StringVar(value="ORIGINALE")  # Default selection
 
     for i, name in enumerate(lopt_name):
         radio = ttk.Radiobutton(root, text=name, variable=radio_var, value=name)
@@ -96,7 +96,6 @@ def choose_graph():
     button_valid.pack(pady=10)
 
 def plot_state_tree():
-    pass
     # Exemple simple d'arbre des états sous forme de graphique
     
     # Set appropriate flags
@@ -124,7 +123,7 @@ root = tk.Tk()
 root.title("Interface avec Matplotlib")
 
 # Création d'un frame pour contenir le graphique
-mode = {"graphe": "POISSON", "tree": True, "verbose": 1, "space": False,"UI":True,"heuristique":False}
+mode = {"graphe": "ORIGINALE", "tree": True, "verbose": 2, "space": False,"UI":True,"heuristique":False}
 amount={
         "carnivores":3,
         "herbivores":2,

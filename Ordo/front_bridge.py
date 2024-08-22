@@ -1,16 +1,39 @@
 import tkinter as tk
 from tkinter import ttk
-from bridge import bridge_crossing_solve, create_data, plot_result
+from bridge import bridge_crossing_solve, plot_result
 from time import sleep
 
 
 
 
 def resolve():
-    time,schedule,makespan=bridge_crossing_solve(task_data)
-    print("schedule : ",schedule)
-    print("makespan : ",makespan)
-    print("time : ",time)
+    def quit_resolve():
+        frame.destroy()
+        create_initial_buttons()
+
+    if VERBOSE>0:
+        print("task_data : ",data[0])
+    button_tree.destroy()
+    button_graph.destroy()
+    frame = ttk.Frame(root, padding="10")
+    frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+
+    button_quit=ttk.Button(frame,text="quit",command=quit_resolve)
+    button_quit.grid(row=5, column=0, padx=5, pady=5, sticky=tk.W)
+
+    p=f"{len(task_data)} tasks"
+    label_size = ttk.Label(frame, text=p)
+    label_size.grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
+    
+    time,schedule,makespan=bridge_crossing_solve(data)
+    if VERBOSE>0:
+        print("schedule : ",schedule) #[(task.id,task.start,task.duration)]
+        print("makespan : ",makespan)
+        print("time : ",time)
+    
+    p=f"result : makespan = {makespan}"
+    label_result = ttk.Label(frame, text=p)
+    label_result.grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
 
 
 def personalise():
@@ -31,7 +54,7 @@ def personalise():
     
     def submit(size,capacity):
         global data
-        data=[]
+        task_data=[]
         for i in range(size):
 
             val_dur=spin_duration[i].get()
@@ -49,7 +72,10 @@ def personalise():
                 val_due=30
             if val_set=="":
                 val_set=None
-            task_data.append((val_dur,val_due,val_weight,[],[],val_set))
+            else:
+                val_set=int(val_set)
+            task_data.append((int(val_dur),int(val_due),int(val_weight),[],[],val_set))
+            data=[task_data,capacity]
         frame.destroy()
         create_initial_buttons()
     
@@ -110,51 +136,7 @@ def personalise():
     submit_button.grid(row=3, column=0,padx=5, columnspan=1, pady=10)
 
 
-def random_tasks():
-    pass
-    def validate_param():
-        pass
-        global data
-        param=[]
-        for s in spins:
-            if s.get()=="":
-                param.append(None)
-            else:
-                param.append(int(s.get()))
 
-        if param[2]==None:
-            param[2]=0
-        if param[3]==None:
-            param[3]=100
-
-
-        frame.destroy()
-        distribution="normal"
-        weights=generate_weights(param[0],param[1],round(param[1]*param[2]/100),round(param[1]*param[3]/100),param[4],param[5],distribution)
-        data=create_data_model(param[0],param[1],weights)
-        create_initial_buttons()
-
-    param_text=["size", "bridge capacity", "mean duration","vmax en '%' de la cap","mean value of the weights", "standard deviation of the weights"]
-    frame = ttk.Frame(root, padding="10")
-    frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-    spins=[]
-    labels=[]
-    distribution_text = "distribution"
-    distribution="normal"
-    for i,p in enumerate(param_text):
-    
-
-        spinbox = ttk.Spinbox(frame, from_=0, to=100, width=5)
-        spinbox.grid(row=i, column=1, padx=5, pady=5)
-        spins.append(spinbox)
-    
-        label = ttk.Label(frame, text=p)
-        label.grid(row=i, column=0, padx=5, pady=5, sticky=tk.W)
-        labels.append(label)
-
-
-    submit_button = ttk.Button(frame, text="Submit", command=validate_param)
-    submit_button.grid(row=len(param_text), column=0,padx=5, columnspan=1, pady=10)
 
 
 
@@ -215,8 +197,6 @@ def choose_tasks():
         # Réafficher les boutons de départ
         if mode["load"]=="CUSTOM":
             personalise()
-        elif mode["load"]=="RANDOM":
-            random_tasks()
         elif mode["load"]=="PRE-LOADED":
             choose_preload()
     
@@ -227,7 +207,7 @@ def choose_tasks():
     except NameError:
         pass
 
-    lopt_name = ["RANDOM", "CUSTOM", "PRE-LOADED"]
+    lopt_name = ["CUSTOM", "PRE-LOADED"]
     
     lradio = []
     radio_var = tk.StringVar(value=lopt_name[-1])  # Default selection
@@ -247,22 +227,38 @@ def choose_tasks():
 
 def create_initial_buttons():
     global button_tree, button_graph
-    button_tree = ttk.Button(root, text="Afficher l'Arbre des États", command= resolve )
+    button_tree = ttk.Button(root, text="resolve the tasks order", command= resolve )
     button_tree.pack(pady=10)
-    button_graph = ttk.Button(root, text="Choose the graph", command=choose_tasks)
+    button_graph = ttk.Button(root, text="choose the tasks", command=choose_tasks)
     button_graph.pack(pady=0)
 
-# Création de la fenêtre principale
-root = tk.Tk()
-root.title("Interface avec Matplotlib")
-mode = {"load":None,"pre_load":None}
-task_data = [(3, 7, 1, [], [], 0), (2, 5, 1, [0, 3], [], 0), (2, 4, 1, [], [], 0),(3, 6, 2, [], [], 0)]  # task = (processing_time, due_date, weight, before_list, after_list, set_date)
-#before_list = liste des taches qui doivent se terminer avant que celle là termine
-#after_list = liste des taches qui doivent se terminer après que celle là termine
-#set_date : date à laquelle la tache doit avoir commencé
 
-# Création des boutons initiaux
-create_initial_buttons()
+def main():
+    global root,mode,task_data,data
+    # Création de la fenêtre principale
+    root = tk.Tk()
+    root.title("Interface avec Matplotlib")
+    mode = {"load":None,"pre_load":None}
+    task_data = [(3, 7, 1, [], [], 0), (2, 5, 1, [0, 3], [], 0), (2, 4, 1, [], [], 0),(3, 6, 2, [], [], 0)]  # task = (processing_time, due_date, weight, before_list, after_list, set_date)
+    #before_list = liste des taches qui doivent se terminer avant que celle là termine
+    #after_list = liste des taches qui doivent se terminer après que celle là termine
+    #set_date : date à laquelle la tache doit avoir commencé
+    data=[task_data,3]
+    # Création des boutons initiaux
+    create_initial_buttons()
 
-# Lancement de la boucle principale
-root.mainloop()
+    # Lancement de la boucle principale
+    root.mainloop()
+
+
+
+
+global VERBOSE
+
+VERBOSE=0
+
+
+if __name__=="__main__":
+    VERBOSE=1
+    main()
+

@@ -1,5 +1,6 @@
 matplotlib
 tk
-numpy
+numpy~=1.26.2
 networkx
-ortools
+ortool
+scipy

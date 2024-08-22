@@ -60,7 +60,12 @@ def BnB_vertex(G,mode):
     covered = np.zeros(G.number_of_edges())
     edges = list(G.edges)
     rd.shuffle(edges)
-    
+    print(edges)
+    UI=mode["UI"]
+    if UI:
+        figure=plotgraph(G)
+    while not plt.waitforbuttonpress():
+        pass
     
     # Graph for the state tree
     state_tree = nx.DiGraph()
@@ -68,14 +73,15 @@ def BnB_vertex(G,mode):
     root_id = state_id
     state_tree.add_node(state_id, label="root", cover=[], remaining_edges=edges.copy(), covered=covered.copy())
     nb_iter = 0
-    UI=mode["UI"]
+    
     TREE=mode["tree"]
     VERBOSE=mode["verbose"]
-    SPACE=mode["space"]
     PARA=False
+    SPACE=mode["space"]
     if VERBOSE==2:print(edges)
-    if UI:
-        figure=plotgraph(G)
+    
+
+
     def iter(vertex_cover, remaining_edges, covered, parent_id, depth):
         nonlocal vertex_cover_min, size_min, state_id, nb_iter,PARA
         
@@ -87,7 +93,6 @@ def BnB_vertex(G,mode):
                 PARA=True
                 vertex_cover_min = [vertex_cover[:]]  # Update the minimum vertex cover
                 size_min = len(vertex_cover)
-                OPT=True
                 if VERBOSE >= 1:
                     vc_min_print=[str(G.nodes[i]["name"]) for i in vertex_cover_min[0]]
                     print("vertex_cover_min =", vc_min_print, "size =", size_min, "and we are at", nb_iter, "iterations")
@@ -112,6 +117,7 @@ def BnB_vertex(G,mode):
         if VERBOSE == 2:
             print(nb_iter)
         if G.degree[v]>G.degree[u] and mode["heuristique"]:
+            print("heur")
             temp=v
             v=u
             u=temp
@@ -159,36 +165,22 @@ def load_graph(mode):
     G = nx.Graph()
     
     
-    if mode["graphe"]=="KARATE":
-        from scipy.io import mmread
-        a = mmread(r'soc-karate.mtx')
-        G = nx.Graph(a)
-        for i in G.nodes:
-            G.nodes[i]["name"]=str(i)
-    elif mode["graphe"]=="US":
-        from scipy.io import mmread
-        a = mmread('inf-USAir97.mtx')
-        G = nx.Graph(a)
-        for i in G.nodes:
-            G.nodes[i]["name"]=str(i)
+    if mode["graphe"]=="AUGMENTEE":
+        n_animaux=["chèvre","choux","loup","rat","lion"]
+        for i in range(1,len(n_animaux)+1): 
+            G.add_nodes_from([(i, {'name': n_animaux[i-1]})])
+        G.add_edges_from([(1, 2), (1, 3), (1, 5), (2, 4)])
+    elif mode["graphe"]=="ORIGINALE":
+        n_animaux=["chèvre","choux","loup"]
+        for i in range(1,len(n_animaux)+1): 
+            G.add_nodes_from([(i, {'name': n_animaux[i-1]})])
+        G.add_edges_from([(1, 2), (1, 3)])
         
-    elif mode["graphe"]=="TEST":
-        # Initialiser un graphe vide
-        G = nx.Graph()
-        L=[]
-        fichier_edges = "data/ENZYMES_g126.edges"
-        # Lire les arêtes depuis le fichier texte
-        with open(fichier_edges, 'r') as file:
-            for line in file:
-                u, v = int(line.split(" ")[0]),int(line.split(" ")[1])  # supposant que les arêtes sont représentées par des paires de nombres entiers
-                L.append((u, v))
-
-        # Afficher quelques informations sur le graphe
-        G.add_edges_from(L)
-        for i in G.nodes:
-            G.nodes[i]["name"]=str(i)
-        print("Nombre de nœuds :", G.number_of_nodes())
-        print("Nombre d'arêtes :", G.number_of_edges())
+    elif mode["graphe"]=="DIFFICILE":
+        n_animaux=["poisson","ours","chèvre","choux","loup","aigle","rat","chèvre"]
+        for i in range(1,len(n_animaux)+1): 
+            G.add_nodes_from([(i, {'name': n_animaux[i-1]})])
+        G.add_edges_from([(1, 2), (2, 3), (3, 4), (3, 5),(1, 6),(3,6),(6,7),(4,7),(2,8),(8,4),(8,6),(8,5)])
     elif mode["graphe"]=="MAISON":
         edges = [
             (1, 2), (1, 3), (2, 4), (3, 5), (4, 6),
@@ -200,10 +192,16 @@ def load_graph(mode):
         G.add_edges_from(edges)
         for i in G.nodes:
             G.nodes[i]["name"]=str(i)
+    elif mode["graphe"]=="CONTRE-EXEMPLE":
+        
+        n_animaux=["chèvre","lion","loup","aigle"]
+        for i in range(1,len(n_animaux)+1): 
+            G.add_nodes_from([(i, {'name': n_animaux[i-1]})])
+        G.add_edges_from([(1, 2), (1, 3),(1, 4)])
     elif mode["graphe"]=="POISSON":
-        n_carnivores=["poisson","ours","chèvre","choux","loup","aigle"]
-        for i in range(1,len(n_carnivores)+1): 
-            G.add_nodes_from([(i, {'name': n_carnivores[i-1]})])
+        n_animaux=["poisson","ours","chèvre","choux","loup","aigle"]
+        for i in range(1,len(n_animaux)+1): 
+            G.add_nodes_from([(i, {'name': n_animaux[i-1]})])
         G.add_edges_from([(1, 2), (2, 3), (3, 4), (3, 5),(1, 6),(3,6)])
     return G
 
