@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from bridge import bridge_crossing_solve, plot_result
 from time import sleep
-
+from test import afficher_resultat
 
 
 
@@ -35,6 +35,9 @@ def resolve():
     label_result = ttk.Label(frame, text=p)
     label_result.grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
 
+    canvas = tk.Canvas(frame, width=800, height=400, bg="white")
+    canvas.grid()
+    afficher_resultat(schedule,canvas)
 
 def personalise():
     
@@ -61,7 +64,7 @@ def personalise():
             val_due=spin_due_date[i].get()
             val_weight=spin_weight[i].get()
             val_set=spin_set_date[i].get()
-
+            val_name=entry_name[i].get()
 
             
             if val_dur=="":
@@ -72,16 +75,18 @@ def personalise():
                 val_due=30
             if val_set=="":
                 val_set=None
+            if val_name=="":
+                val_name=str(i)
             else:
                 val_set=int(val_set)
-            task_data.append((int(val_dur),int(val_due),int(val_weight),[],[],val_set))
+            task_data.append((int(val_dur),int(val_due),int(val_weight),[],[],val_set, val_name))
             data=[task_data,capacity]
         frame.destroy()
         create_initial_buttons()
     
     def suite(size,capacity):
         labels=[]
-        param=['duration','due date','weight','set date']
+        param=['duration','due date','weight','set date','name']
         for i in range(len(param)):
             label = ttk.Label(frame, text=param[i])
             labels.append(label)
@@ -105,6 +110,10 @@ def personalise():
             spin_set_date.append(spinset)
             spinset.grid(row=i+1, column=4, padx=5, pady=5)
 
+            entryname = tk.Entry(frame, width=20)
+            entryname.grid(row=i+1, column=5, padx=5)
+            entry_name.append(entryname)
+
 
             label = ttk.Label(frame, text=f"item {i}")
             labels.append(label)
@@ -115,6 +124,7 @@ def personalise():
     spin_duration=[]
     spin_due_date=[]
     spin_set_date=[]
+    entry_name=[]
     frame = ttk.Frame(root, padding="10")
     frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
@@ -156,8 +166,8 @@ def choose_preload():
         button_valid.destroy()
         create_initial_buttons()
         # Réafficher les boutons de départ
-        if mode["pre_load"]=="II1":# task = (processing_time, due_date, weight, before_list, after_list)
-            task_data=[(1, 7, 1, [], [], 0), (2, 5, 1, [0, 3], [], 0), (2, 4, 1, [], [], 0),(3, 6, 2, [], [], 0),(2, 8, 1, [0], [1], 0), (4, 18, 3, [], [], 0)]
+        if mode["pre_load"]=="II1":# task = (processing_time, due_date, weight, before_list, after_list, nom)
+            task_data=[(1, 7, 1, [], [], 0, "serpent"), (2, 5, 1, [0, 3], [], 0, "tigre"), (2, 4, 1, [], [], 0, "chèvre"),(3, 6, 2, [], [], 0, "lion"),(2, 8, 1, [0], [1], 0, "ours"), (4, 18, 3, [], [], 0, "rhino")]
         elif mode["pre_load"]=="ID1":
             task_data=[7, 1, 3, 4, 5, 6, 2, 7, 7, 4, 9, 8, 9, 4, 9, 5, 8, 3, 1, 5, 5, 7, 8, 9, 5, 4, 5, 3]
         elif mode["pre_load"]=="ID2":
@@ -165,7 +175,8 @@ def choose_preload():
         elif mode["pre_load"]=="IM1":
             task_data=[7, 1, 3, 4, 5, 6, 2, 7, 7, 4, 9, 8, 9, 4, 9, 3, 8]#, 5, 1, 5, 5
         elif mode["pre_load"]=="IS1":
-            task_data=[(3, 7, 1, [], [], 0), (2, 5, 1, [0, 3], [], 0), (2, 4, 1, [], [], 0),(3, 6, 2, [], [], 0)]
+            task_data=[(3, 7, 1, [], [], 0, "test"), (2, 5, 1, [0, 3], [], 0, "test"), (2, 4, 1, [], [], 0, "test"),(3, 6, 2, [], [], 0, "test")]
+        data[0]=task_data
         
     lopt_name = ["II1","ID1", "ID2", "IM1", "IS1"]
     
@@ -239,7 +250,7 @@ def main():
     root = tk.Tk()
     root.title("Interface avec Matplotlib")
     mode = {"load":None,"pre_load":None}
-    task_data = [(3, 7, 1, [], [], 0), (2, 5, 1, [0, 3], [], 0), (2, 4, 1, [], [], 0),(3, 6, 2, [], [], 0)]  # task = (processing_time, due_date, weight, before_list, after_list, set_date)
+    task_data = [(3, 7, 1, [], [], 0, "test1"), (2, 5, 1, [0, 3], [], 0, "test2"), (2, 4, 1, [], [], 0, "test3"),(3, 6, 2, [], [], 0, "test4")]  # task = (processing_time, due_date, weight, before_list, after_list, set_date)
     #before_list = liste des taches qui doivent se terminer avant que celle là termine
     #after_list = liste des taches qui doivent se terminer après que celle là termine
     #set_date : date à laquelle la tache doit avoir commencé

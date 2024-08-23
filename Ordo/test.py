@@ -1,107 +1,80 @@
 import tkinter as tk
-def ordonnancement_taches(taches):
-    # Simule un ordonnancement de tâches basé sur le debut (ex: plus tot d'abord)
-    return sorted(taches, key=lambda x: x[2])
 
-def afficher_resultat():
-    # Récupérer le résultat de l'ordonnancement
-
+def afficher_resultat(taches,canvas):
     # Effacer le contenu du canvas actuel
     canvas.delete("all")
-    cap=3
     
-
     # Paramètres de dessin
     x_depart = 50  # Position de départ horizontale
-    y_depart = 100  # Position verticale fixe pour toutes les tâches
-    hauteur = 40  # Hauteur des rectangles
+    espacement = 0  # Espace entre les rectangles
+    y_positions = []  # Liste pour stocker les positions verticales des tâches
 
     # Couleurs des tâches
     couleurs = ["#FF6347", "#4682B4", "#32CD32", "#FFD700", "#FF69B4"]
-    ordo=ft(taches,cap)
-    # Ajouter les rectangles colorés sur la même ligne
 
-    for cren in ordo:
-        for i in cren:
-            (nom, duree, debut, fin, poids)=taches[i]
-            couleur = couleurs[i % len(couleurs)]  # Choisir une couleur
-            largeur = duree * 10  # Exemple: 10 pixels par minute
-            hauteur = 40 * poids
-            canvas.create_rectangle(x_depart, y_depart, x_depart + largeur, y_depart + hauteur, fill=couleur)
-            x_depart += largeur + 0
-        y_depart += 40
-
-    y_depart = 400
-    for i, (nom, duree, debut, fin, poids) in enumerate(taches):
+    # Ajouter les rectangles colorés
+    for i, ( nom, duree, debut, fin, poids) in enumerate(taches):
         couleur = couleurs[i % len(couleurs)]  # Choisir une couleur
         largeur = duree * 10  # Exemple: 10 pixels par minute
+        hauteur = poids * 30  # Hauteur proportionnelle au poids (5 pixels par unité de poids)
+        x_position = x_depart + debut * 10  # Position horizontale basée sur le début
+        
+        # Calculer la position verticale la plus proche où la tâche ne chevauche pas les autres
+        y_position = 100
+        for y_existing, fin_existing, hauteur_existing in y_positions:
+            if (x_position + largeur > x_depart + fin_existing * 10) or (x_position > x_depart + fin_existing * 10):
+                continue
+            y_position = max(y_position, y_existing + hauteur_existing + espacement)
+        
+        # Enregistrer la position verticale et la fin de la tâche actuelle
+        y_positions.append((y_position, fin, hauteur))
+        
+        # Dessiner le rectangle représentant la tâche
+        canvas.create_rectangle(x_position, y_position, x_position + largeur, y_position + hauteur, fill=couleur)
+        
+        # Ajouter le texte dans le rectangle
+        canvas.create_text(x_position + largeur/2, y_position + hauteur/2, text=f"{nom}", fill="white")
+        
 
-        canvas.create_rectangle(x_depart, y_depart, x_depart + largeur, y_depart + hauteur, fill=couleur)
-        canvas.create_text(x_depart + largeur/2, y_depart + hauteur/2, text=f"{nom} ({duree} min)", fill="white")
-        x_depart += largeur + 0  # Déplacer le point de départ horizontal pour la prochaine tâche
-
-    # Dessiner l'échelle horizontale
-    echelle_y = y_depart + hauteur + 20  # Position de l'échelle sous les rectangles
-    max_duree = sum(tache[1] for tache in taches)  # Durée totale des tâches
+    # Dessiner une échelle horizontale pour l'ensemble des tâches
+    echelle_y = max(y for y, _, _ in y_positions) + 40  # Position de l'échelle sous le dernier rectangle
+    max_duree = max(fin for _, _, _, fin, _ in taches)  # Durée totale des tâches pour ajuster l'échelle
     x_echelle_depart = 50  # Point de départ de l'échelle
-    x_echelle_fin = x_depart  # Point de fin de l'échelle
+    x_echelle_fin = x_echelle_depart + max_duree * 10  # Point de fin de l'échelle
 
     # Dessiner une ligne horizontale pour l'échelle
     canvas.create_line(x_echelle_depart, echelle_y, x_echelle_fin, echelle_y, width=2)
 
     # Ajouter des tics tous les 10 minutes
     for i in range(0, max_duree + 10, 10):
-        x_position = 50 + i * 10  # 10 pixels par minute
+        x_position = x_echelle_depart + i * 10  # 10 pixels par minute
         canvas.create_line(x_position, echelle_y - 5, x_position, echelle_y + 5, width=2)
-        canvas.create_text(x_position, echelle_y + 15, text=f"{round(i/10)} h", anchor=tk.N)
+        canvas.create_text(x_position, echelle_y + 15, text=f"{i} min", anchor=tk.N)
 
-# Définir des tâches avec leurs durées (nom, durée, début, fin, poids)
-taches = [
-    ("Tâche A", 25, 0, 25, 1),
-    ("Tâche B", 10, 25, 35, 2),
-    ("Tâche C", 20, 5, 25, 2),
-    ("Tâche D", 5, 0, 5, 1)
-]
 
-# Créer la fenêtre principale
-fenetre = tk.Tk()
-fenetre.title("Ordonnancement des Tâches")
 
-# Créer un canvas pour afficher les résultats sous forme de rectangles colorés
-canvas = tk.Canvas(fenetre, width=800, height=300, bg="white")
-canvas.pack(pady=0)
+def main():
+    # Définir des tâches avec leurs informations (nom, durée, début, fin, poids)
+    taches = [
+        ("Tâche A", 30, 0, 30, 3),
+        ("Tâche B", 10, 35, 45, 2),
+        ("Tâche C", 20, 10, 30, 1),
+        ("Tâche D", 5, 50, 55, 1)
+    ]
 
-# Bouton pour déclencher l'affichage de l'ordonnancement
-btn_afficher = tk.Button(fenetre, text="Afficher l'Ordonnancement", command=afficher_resultat)
-btn_afficher.pack()
+    # Créer la fenêtre principale
+    fenetre = tk.Tk()
+    fenetre.title("Ordonnancement des Tâches")
 
-# Lancer la boucle principale de Tkinter
-#fenetre.mainloop()
+    # Créer un canvas pour afficher les résultats sous forme de rectangles colorés
+    canvas = tk.Canvas(fenetre, width=800, height=400, bg="white")
+    canvas.pack(pady=20)
 
-def ft(taches,cap):
-    occ=[[] for i in range(cap)]
-    taches=ordonnancement_taches(taches)
-    case=[]
-    for i, (nom, duree, debut, fin, poids) in enumerate(taches):
-        for nb,cren in enumerate(occ):
-            if len(cren)==0:
-                case.append(nb)
-            elif cren[-1][3]<=debut:   
-                case.append(nb)
-        if len(case)==0:
-            print("oula")
-            print((nom, duree, debut, fin, poids))
-            return occ
-        elif len(case)<poids:
-            print("oula2")
-            print((nom, duree, debut, fin, poids))
-            return occ
-        else:
-            for p in range(poids):
-                c=case[0]                
-                occ[c].append(i)
-                case.remove(c)
-            case=[]
-    return occ
+    # Bouton pour déclencher l'affichage de l'ordonnancement
+    btn_afficher = tk.Button(fenetre, text="Afficher l'Ordonnancement", command=lambda: afficher_resultat(taches,canvas))
+    btn_afficher.pack()
 
-print(ft(taches,3))
+    # Lancer la boucle principale de Tkinter
+    fenetre.mainloop()
+if __name__=="__main__":
+    main()

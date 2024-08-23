@@ -22,7 +22,7 @@ def bridge_crossing_solve(data) :
     task_type = collections.namedtuple("task_type", "start end interval")
 
     for task_id, task in enumerate(task_data):
-        processing_time, due_date, weights, before_list, after_list, set_date= task
+        processing_time, due_date, weights, before_list, after_list, set_date, name= task
         suffix = f"_{task_id}"
         start_var = model.new_int_var(0, horizon, "start" + suffix)
         end_var = model.new_int_var(0, horizon, "end" + suffix)
@@ -92,7 +92,7 @@ def bridge_crossing_solve(data) :
         if VERBOSE>0:print("Optimal Schedule Length: ",makespan)
         for task_id in id_tasks:
             task = assigned_tasks[task_id][0]
-            schedule.append((task.id,task.start,task.duration))
+            schedule.append((task_data[task_id][6],task.duration,task.start,task.end,task_data[task_id][2]))
             if VERBOSE>0:print(f"  Task {task.id}: Start at {task.start}, and end at  {task.end}, weight : {task_data[task_id][2]}")
     
     else:
@@ -108,7 +108,7 @@ if __name__ == "__main__":
     
     VERBOSE=1
 
-    task_data = [(3, 7, 1, [], [], 0), (2, 5, 1, [0, 3], [], 0), (2, 4, 1, [], [], 0),(3, 6, 2, [], [], 0)]  # task = (processing_time, due_date, weight, before_list, after_list)
+    task_data = [(3, 7, 1, [], [], 0, "ahah"), (2, 5, 1, [0, 3], [], 0, "ahah"), (2, 4, 1, [], [], 0, "ahah"),(3, 6, 2, [], [], 0, "ahah")]  # task = (processing_time, due_date, weight, before_list, after_list)
     #before_list = liste des taches qui doivent se terminer avant que celle là termine
     #after_list = liste des taches qui doivent se terminer après que celle là termine
     data=[task_data,3]

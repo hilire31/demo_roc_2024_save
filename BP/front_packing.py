@@ -312,7 +312,7 @@ def calculate():
         create_initial_buttons()
         
     stat=stat_an(data).copy()
-    buttons=[button_tree, button_graph,button_option]
+    buttons=[button_tree, button_graph]
     for i in buttons:
         i.destroy()
     
@@ -354,8 +354,6 @@ def create_initial_buttons():
     button_tree.pack(pady=10)
     button_graph = ttk.Button(root, text="Choisir les items", command=choose_load)
     button_graph.pack(pady=0)
-    button_option = ttk.Button(root, text="Choisir les options", command=choose_options)
-    button_option.pack(pady=20)
 
 
 

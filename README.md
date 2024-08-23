@@ -80,3 +80,8 @@ Pour exécuter le script d'Ordonnancement :
 ```sh
 python ./Ordo/front_bridge.py
 ```
+
+
+### Déroulement de la démonstration 
+
+https://docs.google.com/document/d/1DRN3rPTjxWDU4IK0zGcXOzWIrSW1wNlB80sf6cka-CE/edit?usp=sharing
