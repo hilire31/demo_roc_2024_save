@@ -92,7 +92,7 @@ def bridge_crossing_solve(data) :
         if VERBOSE>0:print("Optimal Schedule Length: ",makespan)
         for task_id in id_tasks:
             task = assigned_tasks[task_id][0]
-            schedule.append((task_data[task_id][6],task.duration,task.start,task.end,task_data[task_id][2]))
+            schedule.append((task.duration,task.start,task.end,task_data[task_id][2],task_data[task_id][6]))
             if VERBOSE>0:print(f"  Task {task.id}: Start at {task.start}, and end at  {task.end}, weight : {task_data[task_id][2]}")
     
     else:

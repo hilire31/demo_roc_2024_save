@@ -1,0 +1,4 @@
+à imprimer : rien normalement tout est déjà imprimé
+à découper : 
+	- 5 exemplaires de chaque animal + 6 poids (weight.svg) + 2 hourglass + 1 plateau 
+	- des os pour le branch and bound (au moins 30)

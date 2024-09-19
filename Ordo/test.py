@@ -6,28 +6,30 @@ def afficher_resultat(taches,canvas):
     
     # Paramètres de dessin
     x_depart = 50  # Position de départ horizontale
+    y_depart = 100
     espacement = 0  # Espace entre les rectangles
-    y_positions = []  # Liste pour stocker les positions verticales des tâches
-
+    last_x=[ 0 for i in range(len(taches)+max(poids for _, _, _, poids, _ in taches)+5)]
     # Couleurs des tâches
     couleurs = ["#FF6347", "#4682B4", "#32CD32", "#FFD700", "#FF69B4"]
-
+    max_y=y_depart
     # Ajouter les rectangles colorés
-    for i, ( nom, duree, debut, fin, poids) in enumerate(taches):
+    for i, ( duree, debut, fin, poids, nom) in enumerate(taches):
         couleur = couleurs[i % len(couleurs)]  # Choisir une couleur
-        largeur = duree * 10  # Exemple: 10 pixels par minute
+        largeur = duree * 60  # Exemple: 60 pixels par heure
         hauteur = poids * 30  # Hauteur proportionnelle au poids (5 pixels par unité de poids)
-        x_position = x_depart + debut * 10  # Position horizontale basée sur le début
+        x_position = x_depart + debut * 60  # Position horizontale basée sur le début
         
         # Calculer la position verticale la plus proche où la tâche ne chevauche pas les autres
-        y_position = 100
-        for y_existing, fin_existing, hauteur_existing in y_positions:
-            if (x_position + largeur > x_depart + fin_existing * 10) or (x_position > x_depart + fin_existing * 10):
-                continue
-            y_position = max(y_position, y_existing + hauteur_existing + espacement)
-        
-        # Enregistrer la position verticale et la fin de la tâche actuelle
-        y_positions.append((y_position, fin, hauteur))
+        for i,lastx in enumerate(last_x[0:-4]):
+            if lastx <= x_position:
+                if max(last_x[j] for j in range(i,i+poids))<=x_position:
+                    y_position=y_depart+i*60
+                    if y_position+poids*30 > max_y:
+                        max_y=y_position+poids*30
+                    for j in range(i,i+poids):
+                        last_x[j]=x_position
+                    break
+
         
         # Dessiner le rectangle représentant la tâche
         canvas.create_rectangle(x_position, y_position, x_position + largeur, y_position + hauteur, fill=couleur)
@@ -37,29 +39,30 @@ def afficher_resultat(taches,canvas):
         
 
     # Dessiner une échelle horizontale pour l'ensemble des tâches
-    echelle_y = max(y for y, _, _ in y_positions) + 40  # Position de l'échelle sous le dernier rectangle
-    max_duree = max(fin for _, _, _, fin, _ in taches)  # Durée totale des tâches pour ajuster l'échelle
+    
+    echelle_y =  max_y +10 # Position de l'échelle sous le dernier rectangle
+    max_x = max(fin for _, _, fin, _, _ in taches)  # Durée totale des tâches pour ajuster l'échelle
     x_echelle_depart = 50  # Point de départ de l'échelle
-    x_echelle_fin = x_echelle_depart + max_duree * 10  # Point de fin de l'échelle
+    x_echelle_fin = x_echelle_depart + max_x * 60  # Point de fin de l'échelle
 
     # Dessiner une ligne horizontale pour l'échelle
     canvas.create_line(x_echelle_depart, echelle_y, x_echelle_fin, echelle_y, width=2)
 
     # Ajouter des tics tous les 10 minutes
-    for i in range(0, max_duree + 10, 10):
-        x_position = x_echelle_depart + i * 10  # 10 pixels par minute
+    for i in range(0, max_x + 1, 1):
+        x_position = x_echelle_depart + i * 60  # 10 pixels par minute
         canvas.create_line(x_position, echelle_y - 5, x_position, echelle_y + 5, width=2)
-        canvas.create_text(x_position, echelle_y + 15, text=f"{i} min", anchor=tk.N)
+        canvas.create_text(x_position, echelle_y + 15, text=f"{i} heure", anchor=tk.N)
 
 
 
 def main():
     # Définir des tâches avec leurs informations (nom, durée, début, fin, poids)
     taches = [
-        ("Tâche A", 30, 0, 30, 3),
-        ("Tâche B", 10, 35, 45, 2),
-        ("Tâche C", 20, 10, 30, 1),
-        ("Tâche D", 5, 50, 55, 1)
+        ( 3, 0, 3, 3, "Tâche A"),
+        ( 1, 4, 5, 2, "Tâche B"),
+        ( 2, 3, 5, 1, "Tâche C"),
+        ( 4, 5, 9, 1, "Tâche D")
     ]
 
     # Créer la fenêtre principale

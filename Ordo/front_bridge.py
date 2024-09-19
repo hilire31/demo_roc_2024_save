@@ -250,7 +250,7 @@ def main():
     root = tk.Tk()
     root.title("Interface avec Matplotlib")
     mode = {"load":None,"pre_load":None}
-    task_data = [(3, 7, 1, [], [], 0, "test1"), (2, 5, 1, [0, 3], [], 0, "test2"), (2, 4, 1, [], [], 0, "test3"),(3, 6, 2, [], [], 0, "test4")]  # task = (processing_time, due_date, weight, before_list, after_list, set_date)
+    task_data = task_data=[(3, 7, 1, [], [], 0, "test1"), (2, 5, 1, [0, 3], [], 0, "test2"), (2, 4, 1, [], [], 0, "test3"),(3, 6, 2, [], [], 0, "test4")]  # task = (processing_time, due_date, weight, before_list, after_list, set_date, nom)
     #before_list = liste des taches qui doivent se terminer avant que celle là termine
     #after_list = liste des taches qui doivent se terminer après que celle là termine
     #set_date : date à laquelle la tache doit avoir commencé
